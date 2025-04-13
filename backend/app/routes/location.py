@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from pydantic import BaseModel, Field, validator, confloat
-from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field, validator
+from typing import List, Dict, Any, Optional, Annotated
 from ..utils.database import get_db_connection
 from ..utils.auth import get_token_user, BaseResponse
 
@@ -23,10 +23,10 @@ class LocationBase(BaseModel):
 
 
 class LocationCreate(BaseModel):
-    latitude: confloat(ge=-90, le=90) = Field(...,
-                                              description="Latitude (-90 to 90)")
-    longitude: confloat(ge=-180, le=180) = Field(...,
-                                                 description="Longitude (-180 to 180)")
+    latitude: float = Field(...,
+                            description="Latitude (-90 to 90)", ge=-90, le=90)
+    longitude: float = Field(...,
+                             description="Longitude (-180 to 180)", ge=-180, le=180)
     street: str = Field(..., description="Street address")
     district: str = Field(..., description="District")
     city: str = Field(..., description="City")
@@ -38,10 +38,10 @@ class LocationCreate(BaseModel):
 
 
 class LocationUpdate(BaseModel):
-    latitude: Optional[confloat(
-        ge=-90, le=90)] = Field(None, description="Latitude (-90 to 90)")
-    longitude: Optional[confloat(
-        ge=-180, le=180)] = Field(None, description="Longitude (-180 to 180)")
+    latitude: Optional[float] = Field(
+        None, description="Latitude (-90 to 90)", ge=-90, le=90)
+    longitude: Optional[float] = Field(
+        None, description="Longitude (-180 to 180)", ge=-180, le=180)
     street: Optional[str] = Field(None, description="Street address")
     district: Optional[str] = Field(None, description="District")
     city: Optional[str] = Field(None, description="City")
