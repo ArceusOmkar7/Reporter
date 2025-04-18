@@ -1,73 +1,143 @@
-# Welcome to your Lovable project
+# Reporter Frontend
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/b7324322-fe33-4a6a-9f11-45e29e48ec53
+This is the frontend for the Reporter application, built with React, TypeScript, and Shadcn UI components. It provides a modern, responsive user interface for submitting reports, browsing petitions, and interacting with the community.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+1. **User Authentication**
+   - Sign up and sign in functionality
+   - Persistent authentication state using localStorage
+   - Protected routes for authenticated features
 
-**Use Lovable**
+2. **Report Browsing**
+   - Browse all public reports with search functionality
+   - Filter reports by category, location, and date range
+   - Sort reports by various criteria
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b7324322-fe33-4a6a-9f11-45e29e48ec53) and start prompting.
+3. **Report Details**
+   - View detailed information about each report
+   - Interactive map showing report location
+   - Upvote/downvote functionality
+   - Image gallery for attached photos
 
-Changes made via Lovable will be committed automatically to this repo.
+4. **Report Creation**
+   - Multi-step form with progress indicator
+   - Rich text editor for detailed descriptions
+   - Category selection from predefined options
+   - Interactive map for precise location selection
+   - Multiple image uploads with previews
 
-**Use your preferred IDE**
+5. **Report Editing**
+   - Edit existing reports with the same interface as creation
+   - Update location with interactive map selection
+   - Add or remove images from reports
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+6. **Interactive Map Features**
+   - OpenStreetMap integration with Leaflet.js
+   - Current location detection and centering
+   - Click-to-select location functionality
+   - Draggable marker for precise positioning
+   - Real-time coordinate updates
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+7. **Responsive Design**
+   - Mobile-first approach with responsive components
+   - Adaptive layout for different screen sizes
+   - Touch-friendly interactions for mobile users
 
-Follow these steps:
+## Technology Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **Framework**: React with TypeScript
+- **UI Components**: Shadcn UI (based on Tailwind CSS)
+- **State Management**: React Context API and React Query
+- **Routing**: React Router
+- **Form Handling**: React Hook Form
+- **Mapping**: Leaflet.js with OpenStreetMap
+- **API Client**: Custom fetch-based client
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Getting Started
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prerequisites
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+- Node.js (v16.0.0 or higher)
+- npm (v7.0.0 or higher) or Bun
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+# or
+bun install
 ```
 
-**Edit a file directly in GitHub**
+### Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Start development server
+npm run dev
+# or
+bun dev
+```
 
-**Use GitHub Codespaces**
+The development server will start at `http://localhost:5173`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Building for Production
 
-## What technologies are used for this project?
+```bash
+# Build the application
+npm run build
+# or
+bun run build
+```
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `src/`
+  - `components/` - Reusable UI components
+  - `contexts/` - React context providers
+  - `hooks/` - Custom React hooks
+  - `lib/` - Utility functions and API services
+  - `pages/` - Page components
+  - `App.tsx` - Main application component
+  - `main.tsx` - Entry point
 
-## How can I deploy this project?
+## Usage
 
-Simply open [Lovable](https://lovable.dev/projects/b7324322-fe33-4a6a-9f11-45e29e48ec53) and click on Share -> Publish.
+### Creating a Report
 
-## Can I connect a custom domain to my Lovable project?
+1. Navigate to the "Create Report" page
+2. Fill in the basic information (title, description, category)
+3. Add location details:
+   - Enter address information manually
+   - Click "Use my current location" to automatically detect your location
+   - Use the interactive map to select a precise location by clicking or dragging the marker
+   - The latitude and longitude coordinates will update automatically
+4. Upload images (optional)
+5. Submit the report
 
-Yes it is!
+### Editing a Report
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Navigate to a report you've created
+2. Click the "Edit" button
+3. Update information as needed
+4. For location updates:
+   - Use the interactive map to select a new location
+   - The coordinates will update in real-time
+   - All location changes are saved when you submit the form
+5. Save your changes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Known Issues
+
+- The map may not display properly in some older browsers
+- Location services require HTTPS in production environments
+- Current location detection may be less accurate on some mobile devices
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add some feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request

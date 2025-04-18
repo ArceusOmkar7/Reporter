@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
     ALL: "/api/location/",
     CREATE: "/api/location/",
     DETAILS: (id: number) => `/api/location/${id}`,
+    UPDATE: (id: number) => `/api/location/${id}`,
   },
   // Images
   IMAGE: {

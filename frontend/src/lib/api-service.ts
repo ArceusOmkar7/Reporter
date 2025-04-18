@@ -241,6 +241,22 @@ export const LocationAPI = {
   getDetails: async (locationId: number): Promise<LocationBase> => {
     return apiRequest<LocationBase>(API_ENDPOINTS.LOCATION.DETAILS(locationId));
   },
+
+  // Update location
+  update: async (
+    locationId: number,
+    locationData: Partial<LocationCreate>,
+    userId?: number
+  ): Promise<BaseResponse> => {
+    const queryString = userId ? `?user_id=${userId}` : "";
+    return apiRequest<BaseResponse>(
+      `${API_ENDPOINTS.LOCATION.UPDATE(locationId)}${queryString}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(locationData),
+      }
+    );
+  },
 };
 
 // Image API service

@@ -139,6 +139,15 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
     },
   });
 
+  // Mutation to update location
+  const locationMutation = useMutation({
+    mutationFn: (
+      locationData: Omit<LocationInfo, "landmark"> & { landmark?: string }
+    ) => {
+      return LocationAPI.update(report.locationID, locationData, user?.id);
+    },
+  });
+
   // Mutation for images
   const imageMutation = useMutation({
     mutationFn: ({ reportId, file }: { reportId: number; file: File }) => {
@@ -194,14 +203,27 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
       // Get category ID from selected option
       const categoryID = parseInt(basicInfo.category);
 
-      // 1. Update the report
+      // 1. Update the location data
+      await locationMutation.mutateAsync({
+        street: locationInfo.street,
+        district: locationInfo.district,
+        city: locationInfo.city,
+        state: locationInfo.state,
+        country: locationInfo.country,
+        postalCode: locationInfo.postalCode,
+        landmark: locationInfo.landmark || undefined,
+        latitude: locationInfo.latitude,
+        longitude: locationInfo.longitude,
+      });
+
+      // 2. Update the report
       await reportMutation.mutateAsync({
         title: basicInfo.title,
         description: basicInfo.description,
         categoryID,
       });
 
-      // 2. Delete marked images
+      // 3. Delete marked images
       if (imagesToDelete.length > 0) {
         toast.info(`Removing ${imagesToDelete.length} images...`);
 
@@ -210,7 +232,7 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
         }
       }
 
-      // 3. Upload new images (if any)
+      // 4. Upload new images (if any)
       if (newImages.length > 0) {
         toast.info(`Uploading ${newImages.length} images...`);
 
@@ -222,7 +244,7 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
         }
       }
 
-      // 4. Invalidate queries to refresh data
+      // 5. Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["report", reportId] });
 
       toast.success("Petition updated successfully!");
