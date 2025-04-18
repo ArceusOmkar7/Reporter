@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, Body, status, Form
-from pydantic import BaseModel, Field, EmailStr, validator
+from fastapi import APIRouter, HTTPException, Request, Body, status, Form
+from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
 from ..utils.database import get_db_connection
-from ..utils.auth import generate_token, validate_email, validate_phone, verify_password, BaseResponse, Token
-import bcrypt
+from ..utils.auth import validate_email, validate_phone, verify_password, BaseResponse, UserInfo
 
 router = APIRouter()
 
@@ -43,15 +42,8 @@ class LoginRequest(BaseModel):
     password: str = Field(..., description="User's password")
 
 
-class UserInfo(BaseModel):
-    id: int
-    username: str
-    role: str
-
-
 class LoginResponse(BaseModel):
     message: str
-    token: str
     user: UserInfo
 
 
@@ -75,14 +67,13 @@ async def register(data: RegisterRequest):
             raise HTTPException(
                 status_code=400, detail="Username or email already exists")
 
-        # Hash password
-        hashed_password = bcrypt.hashpw(
-            data.password.encode('utf-8'), bcrypt.gensalt())
+        # Store password as plain text
+        plain_password = data.password
 
-        # Insert user
+        # Insert user with plain text password
         cursor.execute(
             "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-            (data.username, hashed_password, 'Regular')
+            (data.username, plain_password, 'Regular')
         )
         user_id = cursor.lastrowid
 
@@ -107,9 +98,9 @@ async def register(data: RegisterRequest):
 @router.post("/login", response_model=LoginResponse)
 async def login(data: LoginRequest):
     """
-    Authenticate user and return JWT token
+    Authenticate user with username and password
 
-    Validates user credentials and returns a JWT token for use in authenticated requests
+    Validates user credentials and returns user information
     """
     try:
         conn = get_db_connection()
@@ -122,69 +113,68 @@ async def login(data: LoginRequest):
         )
         user = cursor.fetchone()
 
-        if not user or not verify_password(data.password, user['password']):
+        # If no user found with that username
+        if not user:
             raise HTTPException(
                 status_code=401, detail="Invalid username or password")
 
-        # Generate token
-        token = generate_token(user['userID'])
+        # Try to get password with different possible key formats
+        password = None
+        if "password" in user:
+            password = user["password"]
+        elif "Password" in user:
+            password = user["Password"]
+
+        # If password not found in user object
+        if password is None:
+            raise HTTPException(
+                status_code=401, detail="Invalid username or password")
+
+        # Safely compare passwords
+        try:
+            if not verify_password(data.password, password):
+                raise HTTPException(
+                    status_code=401, detail="Invalid username or password")
+        except Exception:
+            # If any error in password verification
+            raise HTTPException(
+                status_code=401, detail="Invalid username or password")
+
+        # Handle different possible key formats for userID
+        user_id = None
+        if "userID" in user:
+            user_id = user["userID"]
+        elif "userid" in user:
+            user_id = user["userid"]
+        else:
+            user_id = 0
+
+        # Handle different possible key formats for username
+        username = user.get("username", user.get("Username", data.username))
+
+        # Handle different possible key formats for role
+        role = user.get("role", user.get("Role", "Regular"))
 
         return {
             "message": "Login successful",
-            "token": token,
             "user": {
-                "id": user['userID'],
-                "username": user['username'],
-                "role": user['role']
+                "id": user_id,
+                "username": username,
+                "role": role
             }
         }
+    except HTTPException:
+        # Re-raise HTTP exceptions as is
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@router.post("/token", response_model=Token)
-async def get_access_token(username: str = Form(...), password: str = Form(...)):
-    """
-    OAuth2 compatible token login, get an access token for future requests
-
-    This endpoint is specifically for Swagger UI authentication and OAuth2 compatibility.
-    Returns an access token that can be used in the "Authorize" section of Swagger UI.
-    """
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        # Get user
-        cursor.execute(
-            "SELECT * FROM users WHERE username = %s",
-            (username,)
+        # Log the actual error but return a generic message to the user
+        print(f"Login error: {str(e)}")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication failed. Please check your credentials."
         )
-        user = cursor.fetchone()
-
-        if not user or not verify_password(password, user['password']):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        # Generate token
-        token = generate_token(user['userID'])
-
-        return {
-            "access_token": token,
-            "token_type": "bearer",
-            "user": {
-                "id": user['userID'],
-                "username": user['username'],
-                "role": user['role']
-            }
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()

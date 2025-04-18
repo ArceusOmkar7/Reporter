@@ -1,37 +1,20 @@
-import bcrypt
 import re
-import jwt
-from fastapi import Depends, HTTPException, Request, Header, status, Security
-from fastapi.security import OAuth2PasswordBearer
-from typing import Optional, List, Dict, Any, Callable, Union
-from ..config.config import Config
-from pydantic import BaseModel, Field
-
-# Set up OAuth2 scheme for Swagger UI - this creates the login button in docs
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+from typing import Optional, List, Dict, Any
+from fastapi import HTTPException, Request, status, Query
+from pydantic import BaseModel
 
 
 def hash_password(password):
-    """Hash a password using bcrypt"""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    """Store password as plain text"""
+    return password
 
 
-def verify_password(password, hashed_password):
-    """Verify a password against its hash"""
-    if isinstance(hashed_password, bytes):
-        encoded_hash = hashed_password
-    else:
-        encoded_hash = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password.encode('utf-8'), encoded_hash)
-
-
-def generate_token(user_id):
-    """Generate a JWT token for the user"""
-    return jwt.encode(
-        {'user_id': user_id},
-        Config.JWT_SECRET_KEY,
-        algorithm='HS256'
-    )
+def verify_password(password, stored_password):
+    """Verify a password against stored plain text password"""
+    # Direct comparison of passwords
+    if isinstance(stored_password, bytes):
+        stored_password = stored_password.decode('utf-8')
+    return password == stored_password
 
 
 def validate_email(email):
@@ -46,36 +29,19 @@ def validate_phone(phone):
     return bool(re.match(pattern, phone))
 
 
-async def get_token_user(token: str = Depends(oauth2_scheme)) -> int:
-    """Dependency to extract user ID from JWT token using OAuth2 scheme for better Swagger UI integration"""
-    try:
-        data = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-        return data['user_id']
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
+# This is a replacement for get_token_user that doesn't require authentication
+async def get_user_id(user_id: int = Query(None, description="Optional user ID parameter")):
+    """
+    Get the user ID from the query parameter
+    Since this API is now public, authentication is not required
+    """
+    if user_id is None:
+        # Return a default user ID if none is provided
+        return 1
+    return user_id
 
 
-# Optional version of the token validator - doesn't require authentication
-# Useful for endpoints that can work both authenticated and unauthenticated
-async def get_optional_token_user(
-    authorization: Optional[str] = Header(None)
-) -> Optional[int]:
-    """Optional dependency to extract user ID from JWT token if present"""
-    if not authorization:
-        return None
-
-    try:
-        token = authorization.split()[1]  # Remove 'Bearer ' prefix
-        data = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-        return data['user_id']
-    except Exception:
-        return None
-
-
+# Function to validate request bodies
 async def validate_request_body(request: Request, required_fields: List[str]) -> Dict[str, Any]:
     """Validate that required fields are present in request body"""
     try:
@@ -114,12 +80,8 @@ class ErrorResponse(BaseModel):
     error: str
 
 
-# Token models
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user: Dict[str, Any]
-
-
-class TokenData(BaseModel):
-    user_id: Optional[int] = None
+# User info model
+class UserInfo(BaseModel):
+    id: int
+    username: str
+    role: str

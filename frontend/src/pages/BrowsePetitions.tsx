@@ -1,174 +1,280 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { ReportAPI, CategoryAPI } from "@/lib/api-service";
+import { ReportListItem, CategoryBase } from "@/lib/api-types";
 import { Header } from "@/components/Header";
-import { PetitionCard } from "@/components/PetitionCard";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectTrigger, 
-  SelectValue, 
-  SelectContent, 
-  SelectItem 
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-
-// Initial petitions data
-const initialPetitionsData = [
-  {
-    id: 1,
-    title: "Fix the potholes on Main Street",
-    description: "The potholes on Main Street have been causing damage to vehicles and are a safety hazard.",
-    location: "Main Street, Downtown",
-    category: "Infrastructure",
-    date: "2023-05-15",
-    votes: 124,
-  },
-  {
-    id: 2,
-    title: "More street lights in Central Park",
-    description: "The park is too dark at night, making it unsafe for pedestrians.",
-    location: "Central Park",
-    category: "Safety",
-    date: "2023-05-10",
-    votes: 89,
-  },
-  {
-    id: 3,
-    title: "Community garden in East Side",
-    description: "We need a community garden to promote sustainable living and community bonding.",
-    location: "East Side Community Center",
-    category: "Infrastructure",
-    date: "2023-05-05",
-    votes: 56,
-  },
-  {
-    id: 4,
-    title: "Improve public transportation",
-    description: "We need more frequent buses and extended service hours.",
-    location: "Citywide",
-    category: "Infrastructure",
-    date: "2023-05-01",
-    votes: 218,
-  },
-  {
-    id: 5,
-    title: "Clean up River Park",
-    description: "The park is littered with trash and needs a community cleanup effort.",
-    location: "River Park",
-    category: "Safety",
-    date: "2023-04-26",
-    votes: 45,
-  },
-  {
-    id: 6,
-    title: "Add bike lanes on Oak Avenue",
-    description: "Oak Avenue is dangerous for cyclists. We need dedicated bike lanes.",
-    location: "Oak Avenue",
-    category: "Infrastructure",
-    date: "2023-04-25",
-    votes: 87,
-  },
-];
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ThumbsUp, ThumbsDown, Calendar, MapPin } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 const BrowsePetitions = () => {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All Categories");
-  const [sortBy, setSortBy] = useState("Newest");
-  const [petitionsData, setPetitionsData] = useState(initialPetitionsData);
-  const { toast } = useToast();
-
-  // Handle voting on petitions
-  const handleVote = (id: number) => {
-    setPetitionsData(prevData => 
-      prevData.map(petition => 
-        petition.id === id ? { ...petition, votes: petition.votes + 1 } : petition
-      )
-    );
-    toast({
-      title: "Vote recorded",
-      description: "Thank you for supporting this petition!",
-    });
-  };
-
-  // Handle "Show Only" button click to filter by category
-  const handleShowOnly = (selectedCategory: string) => {
-    setCategory(selectedCategory);
-    toast({
-      title: "Category filter applied",
-      description: `Showing only ${selectedCategory} petitions`,
-    });
-  };
-
-  // Filter and sort petitions based on user selections
-  const filteredPetitions = petitionsData.filter(petition => {
-    const matchesSearch = petition.title.toLowerCase().includes(search.toLowerCase()) || 
-                         petition.description.toLowerCase().includes(search.toLowerCase()) ||
-                         petition.location.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesCategory = category === "All Categories" || petition.category === category;
-    
-    return matchesSearch && matchesCategory;
+  const [searchParams, setSearchParams] = useState({
+    query: "",
+    category: "",
+    location: "",
+    dateFrom: "",
+    dateTo: "",
   });
 
-  // Sort the filtered petitions
-  const sortedPetitions = [...filteredPetitions].sort((a, b) => {
-    if (sortBy === "Newest") {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    } else if (sortBy === "Oldest") {
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    } else if (sortBy === "Most Votes") {
-      return b.votes - a.votes;
-    }
-    return 0;
+  // Fetch reports based on search parameters
+  const {
+    data: reports,
+    isLoading: isLoadingReports,
+    error: reportsError,
+  } = useQuery({
+    queryKey: ["reports", searchParams],
+    queryFn: async () => {
+      console.log("Fetching reports with params:", searchParams);
+      try {
+        // Don't send "all" as a category to the API, leave it as empty string
+        const apiParams = {
+          ...searchParams,
+          category:
+            searchParams.category === "all" ? "" : searchParams.category,
+        };
+
+        const data = await ReportAPI.search(apiParams);
+        console.log("Received reports:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+        throw error;
+      }
+    },
   });
+
+  // Fetch categories for the filter dropdown
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      console.log("Fetching categories");
+      try {
+        const data = await CategoryAPI.getAll();
+        console.log("Received categories:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        throw error;
+      }
+    },
+  });
+
+  useEffect(() => {
+    console.log("Component state:", {
+      reports,
+      isLoadingReports,
+      reportsError,
+      categories,
+    });
+  }, [reports, isLoadingReports, reportsError, categories]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchParams((prev) => ({ ...prev, query: e.target.value }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSearchParams((prev) => ({ ...prev, category: value }));
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchParams((prev) => ({ ...prev, location: e.target.value }));
+  };
+
+  // Function to clear all filters
+  const clearFilters = () => {
+    setSearchParams({
+      query: "",
+      category: "",
+      location: "",
+      dateFrom: "",
+      dateTo: "",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
-      <main className="flex-1 container max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold mb-10">Browse Petitions</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr,1fr] gap-4 mb-8">
-          <Input 
-            type="text" 
-            placeholder="Search petitions..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-gray-900/50 border-gray-700"
-          />
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700 text-white">
-              <SelectItem value="All Categories">All Categories</SelectItem>
-              <SelectItem value="Infrastructure">Infrastructure</SelectItem>
-              <SelectItem value="Safety">Safety</SelectItem>
-              <SelectItem value="Environment">Environment</SelectItem>
-              <SelectItem value="Education">Education</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white">
-              <SelectValue placeholder="Newest" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700 text-white">
-              <SelectItem value="Newest">Newest</SelectItem>
-              <SelectItem value="Most Votes">Most Votes</SelectItem>
-              <SelectItem value="Oldest">Oldest</SelectItem>
-            </SelectContent>
-          </Select>
+      <main className="flex-1 container px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Browse Petitions</h1>
+          <Link to="/new">
+            <Button className="bg-white text-black hover:bg-gray-200">
+              Start a Petition
+            </Button>
+          </Link>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sortedPetitions.map((petition) => (
-            <PetitionCard 
-              key={petition.id} 
-              {...petition} 
-              onVote={handleVote}
-              onShowOnly={handleShowOnly}
-            />
-          ))}
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Filters sidebar */}
+          <div className="space-y-6 col-span-1">
+            <div>
+              <h3 className="text-lg font-medium mb-3">Search</h3>
+              <Input
+                placeholder="Search petitions..."
+                value={searchParams.query}
+                onChange={handleSearchChange}
+                className="bg-gray-900 border-gray-700"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Categories</h3>
+              <Select
+                value={
+                  searchParams.category === "" ? "all" : searchParams.category
+                }
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger className="bg-gray-900 border-gray-700">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {isLoadingCategories ? (
+                    <SelectItem value="loading" disabled>
+                      Loading categories...
+                    </SelectItem>
+                  ) : (
+                    categories?.map((category: CategoryBase) => (
+                      <SelectItem
+                        key={category.categoryID}
+                        value={category.categoryName}
+                      >
+                        {category.categoryName}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Location</h3>
+              <Input
+                placeholder="City, State, or Country"
+                value={searchParams.location}
+                onChange={handleLocationChange}
+                className="bg-gray-900 border-gray-700"
+              />
+            </div>
+
+            <div className="pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="w-full bg-transparent border-gray-700 hover:bg-gray-800"
+              >
+                Clear All Filters
+              </Button>
+            </div>
+          </div>
+
+          {/* Reports grid */}
+          <div className="col-span-1 md:col-span-3">
+            {isLoadingReports ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="bg-gray-900/30 border-gray-800">
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-3/4 mb-4 bg-gray-800" />
+                      <Skeleton className="h-4 w-full mb-2 bg-gray-800" />
+                      <Skeleton className="h-4 w-full mb-2 bg-gray-800" />
+                      <Skeleton className="h-4 w-2/3 bg-gray-800" />
+                    </CardContent>
+                    <CardFooter className="flex justify-between p-4 border-t border-gray-800">
+                      <Skeleton className="h-8 w-20 bg-gray-800" />
+                      <Skeleton className="h-8 w-20 bg-gray-800" />
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : reportsError ? (
+              <div className="text-center py-12">
+                <p className="text-red-400">
+                  Error loading reports. Please try again later.
+                </p>
+              </div>
+            ) : reports?.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400">
+                  No reports found matching your criteria.
+                </p>
+                <Button
+                  variant="link"
+                  className="text-white mt-2"
+                  onClick={clearFilters}
+                >
+                  Clear filters
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {reports?.map((report: ReportListItem) => (
+                  <Link
+                    to={`/reports/${report.reportID}`}
+                    key={report.reportID}
+                  >
+                    <Card className="bg-gray-900/30 border-gray-800 hover:border-gray-700 transition-all h-full flex flex-col">
+                      <CardContent className="p-6 flex-1">
+                        <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                          {report.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          {report.categoryName && (
+                            <Badge className="bg-gray-800 hover:bg-gray-800 text-white">
+                              {report.categoryName}
+                            </Badge>
+                          )}
+                          {report.city && report.state && (
+                            <div className="flex items-center gap-1 text-gray-400 text-xs">
+                              <MapPin size={12} />
+                              <span>
+                                {report.city}, {report.state}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-300 line-clamp-3 text-sm">
+                          {report.description}
+                        </p>
+                      </CardContent>
+                      <CardFooter className="flex justify-between p-4 border-t border-gray-800">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1 text-green-400">
+                            <ThumbsUp size={16} />
+                            <span>{report.upvotes || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-red-400">
+                            <ThumbsDown size={16} />
+                            <span>{report.downvotes || 0}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center text-gray-400 text-xs">
+                          <Calendar size={12} className="mr-1" />
+                          {formatDistanceToNow(new Date(report.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

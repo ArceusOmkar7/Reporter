@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field, validator
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from ..utils.database import get_db_connection
-from ..utils.auth import get_token_user, validate_email, validate_phone, oauth2_scheme, BaseResponse
+from ..utils.auth import validate_email, validate_phone, BaseResponse
 
 router = APIRouter()
 
@@ -44,13 +44,39 @@ class ProfileUpdateRequest(BaseModel):
         return v
 
 
-@router.get("/profile", response_model=UserProfileResponse, summary="Get User Profile")
-async def get_user_profile(current_user: int = Depends(get_token_user)):
+@router.get("/all", response_model=List[UserProfileResponse], summary="Get All Users")
+async def get_all_users():
     """
-    Get current user's profile
+    Get all users' profiles
 
-    Retrieves the profile information of the currently authenticated user.
-    Requires authentication via Bearer token.
+    Retrieves the profile information for all users in the system.
+    This endpoint is public and doesn't require authentication.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            """SELECT u.userID, u.username, u.role, ui.firstName, ui.middleName, 
+            ui.lastName, ui.email, ui.contactNumber 
+            FROM users u 
+            JOIN user_info ui ON u.userID = ui.userID"""
+        )
+        users = cursor.fetchall()
+        return users
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@router.get("/profile/{user_id}", response_model=UserProfileResponse, summary="Get User Profile")
+async def get_user_profile(user_id: int):
+    """
+    Get user profile by ID
+
+    Retrieves the profile information for a specific user by their ID.
+    This endpoint is public and doesn't require authentication.
     """
     try:
         conn = get_db_connection()
@@ -61,7 +87,7 @@ async def get_user_profile(current_user: int = Depends(get_token_user)):
             FROM users u 
             JOIN user_info ui ON u.userID = ui.userID 
             WHERE u.userID = %s""",
-            (current_user,)
+            (user_id,)
         )
         user = cursor.fetchone()
         if user:
@@ -74,18 +100,22 @@ async def get_user_profile(current_user: int = Depends(get_token_user)):
         conn.close()
 
 
-@router.put("/profile", response_model=BaseResponse, summary="Update User Profile")
-async def update_user_profile(data: ProfileUpdateRequest, current_user: int = Depends(get_token_user)):
+@router.put("/profile/{user_id}", response_model=BaseResponse, summary="Update User Profile")
+async def update_user_profile(user_id: int, data: ProfileUpdateRequest):
     """
-    Update current user's profile
+    Update user profile
 
-    Updates the profile information of the currently authenticated user.
+    Updates the profile information for a specific user by their ID.
     Only the fields provided will be updated.
-    Requires authentication via Bearer token.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Check if user exists
+        cursor.execute("SELECT * FROM users WHERE userID = %s", (user_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="User not found")
 
         # Update user info
         cursor.execute(
@@ -97,7 +127,7 @@ async def update_user_profile(data: ProfileUpdateRequest, current_user: int = De
             contactNumber = COALESCE(%s, contactNumber) 
             WHERE userID = %s""",
             (data.firstName, data.middleName, data.lastName,
-             data.email, data.contactNumber, current_user)
+             data.email, data.contactNumber, user_id)
         )
 
         conn.commit()

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the backend for the Reporter application, built with FastAPI and MySQL. It provides RESTful API endpoints for user authentication, report submission, image uploads, voting, and more.
+This is the backend for the Reporter application, built with FastAPI and MySQL. It provides RESTful API endpoints for user authentication, report submission, image uploads, voting, and more. The API is fully public with no authentication requirements.
 
 ## Completed Tasks
 
@@ -10,11 +10,11 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
    - Created the database schema in `table_creation.sql`.
    - Established database connection in `utils/database.py`.
 
-2. **Authentication**
-   - Implemented secure authentication using JWT tokens
-   - Added OAuth2 password flow for Swagger UI integration
-   - Implemented login, registration and token validation
-   - Created robust validation for emails and passwords
+2. **Simple Authentication**
+   - Implemented simple username/password authentication (no JWT tokens)
+   - Passwords are stored as plain text for simplicity
+   - All API endpoints are publicly accessible without authentication
+   - No bearer token required for API access
 
 3. **Models**
    - Defined database models for:
@@ -34,8 +34,9 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
      - Images (`app/routes/image.py`) with file upload support
      - Locations (`app/routes/location.py`)
      - Reports (`app/routes/report.py`) with search functionality
-     - Users (`app/routes/user.py`)
+     - Users (`app/routes/user.py`) with public access to all user data
      - Votes (`app/routes/vote.py`)
+   - Added a health check endpoint at the base URL (`/`)
 
 5. **Framework Migration**
    - Successfully migrated from Flask to FastAPI
@@ -46,7 +47,6 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
 6. **Documentation**
    - Added detailed API documentation with Swagger UI and ReDoc integration
    - Documented request/response models with field descriptions
-   - Provided clear authentication requirements for protected endpoints
    - Improved code documentation with detailed docstrings
 
 7. **Error Handling**
@@ -84,6 +84,8 @@ python run.py
 
 The API will be available at `http://localhost:8000`
 
+Access the health check endpoint at `http://localhost:8000/` to verify the API is running correctly.
+
 ## API Documentation
 
 FastAPI automatically generates interactive API documentation. After starting the server, access:
@@ -94,9 +96,9 @@ FastAPI automatically generates interactive API documentation. After starting th
 
 1. Go to `http://localhost:8000/docs`
 2. Register a new user using the `/api/auth/register` endpoint
-3. Click the "Authorize" button at the top right
-4. Enter your username and password
-5. All authenticated endpoints will now work with your credentials
+3. Login with your username and password using the `/api/auth/login` endpoint
+4. All API endpoints are publicly accessible without authentication
+5. The users endpoint shows information for all users through `/api/user/all`
 
 ### Authentication Endpoints
 
@@ -106,14 +108,25 @@ FastAPI automatically generates interactive API documentation. After starting th
 - **Response**: User ID and success message
 
 #### POST /api/auth/login
-- **Description**: Authenticate and get JWT token
+- **Description**: Authenticate user with username and password
 - **Request Body**: Username and password
-- **Response**: JWT token for authorization
+- **Response**: User information
 
-#### POST /api/auth/token
-- **Description**: OAuth2 compatible token endpoint (for Swagger UI)
-- **Form Data**: Username and password
-- **Response**: Access token for use with the authorization system
+### User Endpoints
+
+#### GET /api/user/all
+- **Description**: Get all users in the system
+- **Response**: List of all users with their profiles
+
+#### GET /api/user/profile/{user_id}
+- **Description**: Get user profile by ID
+- **Response**: User profile details
+
+### Test Endpoints
+
+#### GET /
+- **Description**: API health check endpoint
+- **Response**: API status information with timestamp
 
 ### Data Endpoints
 
@@ -123,16 +136,7 @@ All data endpoints follow RESTful principles with consistent patterns:
 - PUT endpoints for updating existing resources
 - DELETE endpoints for removing resources
 
-Protected endpoints require JWT authentication via Bearer token.
-
-## Authorization
-
-Protected routes require a Bearer token in the Authorization header:
-```
-Authorization: Bearer <token>
-```
-
-For Swagger UI, use the "Authorize" button to input credentials.
+All endpoints are public and don't require authentication.
 
 ## Pending Tasks
 
@@ -141,29 +145,14 @@ For Swagger UI, use the "Authorize" button to input credentials.
    - Implement integration tests for critical user flows
    - Set up automated testing pipeline
 
-2. **Performance Optimization**
-   - Add database query optimization for high traffic endpoints
-   - Implement caching for frequently accessed data
-   - Optimize file upload/download handling
-
-3. **Deployment**
-   - Configure production environment settings
-   - Set up containerization (Docker)
-   - Implement CI/CD pipeline
-
-4. **Frontend Integration**
+2. **Frontend Integration**
    - Complete integration with frontend application
-   - Implement real-time notifications with WebSockets
    - Add client-side error handling for API responses
-
-5. **Security Enhancements**
-   - Implement rate limiting
-   - Add CSRF protection
-   - Enhance password security (complexity requirements, expiration)
 
 ## Technical Details
 
-- **Authentication**: JWT tokens with OAuth2 password flow
+- **Authentication**: Simple username/password authentication
+- **Password Storage**: Plain text (no encryption)
 - **Database**: MySQL with connection pooling
 - **File Storage**: Local file system with secure naming
 - **API Documentation**: OpenAPI 3.0 (Swagger/ReDoc)
@@ -171,7 +160,9 @@ For Swagger UI, use the "Authorize" button to input credentials.
 - **Validation**: Pydantic models with field validation
 
 ## Notes
-- Authentication is handled using JWT tokens with 24-hour expiration
+- All API endpoints are publicly accessible
+- All user data is publicly accessible through the API
+- Passwords are stored as plain text for simplicity
 - File uploads are stored in the `uploads` directory with secure filenames
 - All endpoints return standardized response formats
 - Error responses include specific error details for debugging

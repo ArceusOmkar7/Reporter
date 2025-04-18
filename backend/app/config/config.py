@@ -10,7 +10,7 @@ class Config:
     DB_HOST = 'localhost'
     DB_USER = 'root'
     DB_PASSWORD = '1234'
-    DB_NAME = 'reporter_py'
+    DB_NAME = 'reporter_lab'
 
     # JWT configuration
     JWT_SECRET_KEY = SECRET_KEY

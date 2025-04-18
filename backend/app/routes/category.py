@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from ..utils.database import get_db_connection
-from ..utils.auth import get_token_user, BaseResponse, get_optional_token_user
+from ..utils.auth import get_user_id, BaseResponse
 
 router = APIRouter()
 
@@ -76,7 +76,7 @@ async def get_category(category_id: int):
 
 
 @router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED, summary="Create Category")
-async def create_category(data: CategoryCreate, current_user: int = Depends(get_token_user)):
+async def create_category(data: CategoryCreate, user_id: int = Depends(get_user_id)):
     """
     Create a new category
 
@@ -100,7 +100,7 @@ async def create_category(data: CategoryCreate, current_user: int = Depends(get_
 
 
 @router.put("/{category_id}", response_model=BaseResponse, summary="Update Category")
-async def update_category(category_id: int, data: CategoryUpdate, current_user: int = Depends(get_token_user)):
+async def update_category(category_id: int, data: CategoryUpdate, user_id: int = Depends(get_user_id)):
     """
     Update a category
 
@@ -138,7 +138,7 @@ async def update_category(category_id: int, data: CategoryUpdate, current_user: 
 
 
 @router.delete("/{category_id}", response_model=BaseResponse, summary="Delete Category")
-async def delete_category(category_id: int, current_user: int = Depends(get_token_user)):
+async def delete_category(category_id: int, user_id: int = Depends(get_user_id)):
     """
     Delete a category
 

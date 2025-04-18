@@ -1,28 +1,36 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from .config.config import Config
 import os
+from datetime import datetime
 
 
 def create_app():
     app = FastAPI(
         title="Reporter API",
-        description="API for Reporter application",
+        description="API for Reporter application - Public API with no authentication requirements",
         version="1.0.0",
         openapi_tags=[
-            {"name": "Authentication", "description": "User authentication endpoints"},
-            {"name": "Users", "description": "User management endpoints"},
+            {"name": "Authentication",
+                "description": "Simple username/password login (no JWT tokens)"},
+            {"name": "Users", "description": "Public user management endpoints"},
             {"name": "Reports", "description": "Report management endpoints"},
             {"name": "Categories", "description": "Category management endpoints"},
             {"name": "Locations", "description": "Location management endpoints"},
             {"name": "Images", "description": "Image management endpoints"},
-            {"name": "Votes", "description": "Voting endpoints"}
+            {"name": "Votes", "description": "Voting endpoints"},
+            {"name": "Test", "description": "Test endpoints for system verification"}
         ]
     )
 
     # Ensure upload directory exists
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+
+    # Mount static file server for uploads
+    app.mount("/backend/uploads",
+              StaticFiles(directory=Config.UPLOAD_FOLDER), name="uploads")
 
     # Enable CORS for API routes
     app.add_middleware(
@@ -32,6 +40,22 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Add test endpoint at base URL
+    @app.get("/", tags=["Test"], summary="API Health Check")
+    async def test_endpoint():
+        """
+        Simple test endpoint to verify the API is running
+
+        Returns basic information about the API status
+        """
+        return {
+            "status": "online",
+            "message": "Reporter API is running",
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0",
+            "documentation": "/docs"
+        }
 
     # Register routers
     from .routes.auth import router as auth_router

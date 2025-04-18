@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field, validator
 from typing import List, Dict, Any, Optional, Annotated
 from ..utils.database import get_db_connection
-from ..utils.auth import get_token_user, BaseResponse
+from ..utils.auth import get_user_id, BaseResponse
 
 router = APIRouter()
 
@@ -102,7 +102,7 @@ async def get_location(location_id: int):
 
 
 @router.post("/", response_model=LocationResponse, status_code=status.HTTP_201_CREATED, summary="Create Location")
-async def create_location(data: LocationCreate, current_user: int = Depends(get_token_user)):
+async def create_location(data: LocationCreate, user_id: int = Depends(get_user_id)):
     """
     Create a new location
 
@@ -130,7 +130,7 @@ async def create_location(data: LocationCreate, current_user: int = Depends(get_
 
 
 @router.put("/{location_id}", response_model=BaseResponse, summary="Update Location")
-async def update_location(location_id: int, data: LocationUpdate, current_user: int = Depends(get_token_user)):
+async def update_location(location_id: int, data: LocationUpdate, user_id: int = Depends(get_user_id)):
     """
     Update a location
 
@@ -179,7 +179,7 @@ async def update_location(location_id: int, data: LocationUpdate, current_user: 
 
 
 @router.delete("/{location_id}", response_model=BaseResponse, summary="Delete Location")
-async def delete_location(location_id: int, current_user: int = Depends(get_token_user)):
+async def delete_location(location_id: int, user_id: int = Depends(get_user_id)):
     """
     Delete a location
 

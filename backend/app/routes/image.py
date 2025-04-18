@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, status
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, status, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import os
+import time
 from werkzeug.utils import secure_filename
 from ..utils.database import get_db_connection
-from ..utils.auth import get_token_user, BaseResponse
+from ..utils.auth import get_user_id, BaseResponse
 from ..config.config import Config
 
 router = APIRouter()
@@ -56,7 +57,8 @@ async def upload_image(
     report_id: int,
     file: UploadFile = File(...,
                             description="Image file to upload (PNG, JPG, JPEG, GIF)"),
-    current_user: int = Depends(get_token_user)
+    user_id: int = Depends(get_user_id),
+    request: Request = None,
 ):
     """
     Upload an image for a report
@@ -75,21 +77,30 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="File type not allowed")
 
     try:
-        # Save the file
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
+        # Create a unique filename with timestamp and report ID to avoid collisions
+        original_filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(original_filename)
+        timestamp = int(time.time())
+        unique_filename = f"report_{report_id}_{name}_{timestamp}{ext}"
+
+        # Save the file with unique name
+        filepath = os.path.join(Config.UPLOAD_FOLDER, unique_filename)
 
         # Save uploaded file
         contents = await file.read()
         with open(filepath, "wb") as f:
             f.write(contents)
 
+        # Store with /backend/uploads/ prefix for easier frontend access
+        # Include full URL for cross-origin access
+        db_filepath = f"http://localhost:8000/backend/uploads/{unique_filename}"
+
         # Save to database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO images (imageURL, reportID) VALUES (%s, %s)",
-            (filename, report_id)
+            (db_filepath, report_id)
         )
         conn.commit()
         return {"message": "Image uploaded successfully", "id": cursor.lastrowid}
@@ -101,7 +112,7 @@ async def upload_image(
 
 
 @router.delete("/{image_id}", response_model=BaseResponse, summary="Delete Image")
-async def delete_image(image_id: int, current_user: int = Depends(get_token_user)):
+async def delete_image(image_id: int, user_id: int = Depends(get_user_id)):
     """
     Delete an image
 
@@ -118,8 +129,13 @@ async def delete_image(image_id: int, current_user: int = Depends(get_token_user
         if not image:
             raise HTTPException(status_code=404, detail="Image not found")
 
+        # Extract filename from the stored URL path
+        # URLs are stored as http://localhost:8000/backend/uploads/filename
+        image_url = image['imageURL']
+        filename = os.path.basename(image_url)
+
         # Delete file
-        filepath = os.path.join(Config.UPLOAD_FOLDER, image['imageURL'])
+        filepath = os.path.join(Config.UPLOAD_FOLDER, filename)
         if os.path.exists(filepath):
             os.remove(filepath)
 

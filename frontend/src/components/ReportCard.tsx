@@ -1,10 +1,9 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, ThumbsUp } from "lucide-react";
 import { useState } from "react";
 
-export interface PetitionCardProps {
+export interface ReportCardProps {
   id: number;
   title: string;
   description: string;
@@ -18,7 +17,7 @@ export interface PetitionCardProps {
   onShowOnly?: (category: string) => void;
 }
 
-export const PetitionCard = ({
+export const ReportCard = ({
   id,
   title,
   description,
@@ -30,7 +29,7 @@ export const PetitionCard = ({
   showOnlyButton = true,
   onVote,
   onShowOnly,
-}: PetitionCardProps) => {
+}: ReportCardProps) => {
   const handleVote = () => {
     if (onVote) {
       onVote(id);
@@ -47,7 +46,12 @@ export const PetitionCard = ({
     <div className="flex flex-col">
       <div className="rounded-md overflow-hidden mb-4">
         <div className="image-placeholder h-48 w-full bg-gray-800/50 flex items-center justify-center">
-          <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            className="h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -66,21 +70,24 @@ export const PetitionCard = ({
       <p className="text-xs text-gray-500 mb-4">Location: {location}</p>
       <div className="mt-auto flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="p-0 h-auto hover:bg-transparent"
             onClick={handleVote}
           >
-            <ThumbsUp size={15} className="text-gray-400 hover:text-white transition-colors" />
+            <ThumbsUp
+              size={15}
+              className="text-gray-400 hover:text-white transition-colors"
+            />
           </Button>
           <span className="text-sm">{votes} votes</span>
         </div>
         <div className="flex gap-2">
           {showOnlyButton && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
               onClick={handleShowOnly}
             >
@@ -89,9 +96,9 @@ export const PetitionCard = ({
           )}
           {showDetailsButton && (
             <Link to={`/reports/${id}`}>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
               >
                 View Details

@@ -1,8 +1,9 @@
-from ..utils.auth import get_token_user, BaseResponse
+from ..utils.auth import get_user_id, BaseResponse
 from ..utils.database import get_db_connection
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends, Request, Query, status
+from datetime import datetime
 
 router = APIRouter()
 
@@ -124,8 +125,9 @@ async def search_reports(
             params.append(category)
 
         if location:
-            sql += " AND (l.street LIKE %s OR l.city LIKE %s OR l.state LIKE %s)"
-            params.extend([f'%{location}%', f'%{location}%', f'%{location}%'])
+            sql += " AND (l.street LIKE %s OR l.city LIKE %s OR l.state LIKE %s OR l.country LIKE %s)"
+            params.extend([f'%{location}%', f'%{location}%',
+                          f'%{location}%', f'%{location}%'])
 
         if dateFrom:
             sql += " AND r.createdAt >= %s"
@@ -139,6 +141,14 @@ async def search_reports(
 
         cursor.execute(sql, params)
         reports = cursor.fetchall()
+
+        # Convert datetime objects to strings
+        for report in reports:
+            if report and isinstance(report.get('createdAt'), datetime):
+                report['createdAt'] = report.get('createdAt').isoformat()
+            if report and isinstance(report.get('updatedAt'), datetime):
+                report['updatedAt'] = report.get('updatedAt').isoformat()
+
         return reports
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -185,9 +195,26 @@ async def get_report_details(report_id: int):
             "SELECT * FROM images WHERE reportID = %s",
             (report_id,)
         )
-        report['images'] = cursor.fetchall()
+        images = cursor.fetchall()
 
-        return report
+        # Convert datetime objects to strings in images
+        for image in images:
+            if image and 'uploadedAt' in image and isinstance(image.get('uploadedAt'), datetime):
+                image['uploadedAt'] = image.get('uploadedAt').isoformat()
+
+        if report:
+            report_dict = dict(report)
+            report_dict['images'] = images
+
+            # Convert datetime objects to strings in report
+            if 'createdAt' in report_dict and isinstance(report_dict.get('createdAt'), datetime):
+                report_dict['createdAt'] = report_dict.get('createdAt').isoformat()
+            if 'updatedAt' in report_dict and isinstance(report_dict.get('updatedAt'), datetime):
+                report_dict['updatedAt'] = report_dict.get('updatedAt').isoformat()
+
+            return report_dict
+
+        raise HTTPException(status_code=404, detail="Report not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -196,12 +223,12 @@ async def get_report_details(report_id: int):
 
 
 @router.post("/", response_model=ReportResponse, status_code=status.HTTP_201_CREATED, summary="Create Report")
-async def create_report(data: ReportCreate, current_user: int = Depends(get_token_user)):
+async def create_report(data: ReportCreate, user_id: int = Depends(get_user_id)):
     """
     Create a new report
 
     Creates a new report with the specified details.
-    Requires authentication.
+    User ID can be provided as a query parameter, otherwise uses default user.
     """
     try:
         conn = get_db_connection()
@@ -212,7 +239,7 @@ async def create_report(data: ReportCreate, current_user: int = Depends(get_toke
             (title, description, categoryID, locationID, userID) 
             VALUES (%s, %s, %s, %s, %s)""",
             (data.title, data.description, data.categoryID,
-             data.locationID, current_user)
+             data.locationID, user_id)
         )
 
         report_id = cursor.lastrowid
@@ -226,34 +253,31 @@ async def create_report(data: ReportCreate, current_user: int = Depends(get_toke
 
 
 @router.put("/{report_id}", response_model=BaseResponse, summary="Update Report")
-async def update_report(report_id: int, data: ReportUpdate, current_user: int = Depends(get_token_user)):
+async def update_report(report_id: int, data: ReportUpdate, user_id: int = Depends(get_user_id)):
     """
     Update a report
 
     Updates an existing report with new details.
-    Only the owner of the report can update it.
-    Requires authentication.
+    This is a public API so any user can update any report.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Check if report exists and belongs to user
+        # Check if report exists
         cursor.execute(
-            "SELECT * FROM reports WHERE reportID = %s AND userID = %s",
-            (report_id, current_user)
+            "SELECT * FROM reports WHERE reportID = %s",
+            (report_id,)
         )
         report = cursor.fetchone()
         if not report:
-            raise HTTPException(
-                status_code=404, detail="Report not found or unauthorized")
+            raise HTTPException(status_code=404, detail="Report not found")
 
         # Update with new data or keep existing
-        title = data.title if data.title is not None else report['title']
-        description = data.description if data.description is not None else report[
-            'description']
-        category_id = data.categoryID if data.categoryID is not None else report['categoryID']
-        location_id = data.locationID if data.locationID is not None else report['locationID']
+        title = data.title if data.title is not None else report.get('title', '')
+        description = data.description if data.description is not None else report.get('description', '')
+        category_id = data.categoryID if data.categoryID is not None else report.get('categoryID', 0)
+        location_id = data.locationID if data.locationID is not None else report.get('locationID', 0)
 
         cursor.execute(
             """UPDATE reports SET 
@@ -272,26 +296,24 @@ async def update_report(report_id: int, data: ReportUpdate, current_user: int = 
 
 
 @router.delete("/{report_id}", response_model=BaseResponse, summary="Delete Report")
-async def delete_report(report_id: int, current_user: int = Depends(get_token_user)):
+async def delete_report(report_id: int, user_id: int = Depends(get_user_id)):
     """
     Delete a report
 
     Permanently removes a report from the system.
-    Only the owner of the report can delete it.
-    Requires authentication.
+    This is a public API so any user can delete any report.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check if report exists and belongs to user
+        # Check if report exists
         cursor.execute(
-            "SELECT * FROM reports WHERE reportID = %s AND userID = %s",
-            (report_id, current_user)
+            "SELECT * FROM reports WHERE reportID = %s",
+            (report_id,)
         )
         if not cursor.fetchone():
-            raise HTTPException(
-                status_code=404, detail="Report not found or unauthorized")
+            raise HTTPException(status_code=404, detail="Report not found")
 
         # Delete report
         cursor.execute("DELETE FROM reports WHERE reportID = %s", (report_id,))

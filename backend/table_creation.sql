@@ -1,5 +1,7 @@
 USE reporter_py;
 
+START TRANSACTION;
+
 -- Users Table
 CREATE TABLE IF NOT EXISTS Users (
     userID INT PRIMARY KEY AUTO_INCREMENT,
@@ -75,3 +77,5 @@ CREATE TABLE IF NOT EXISTS Votes (
     FOREIGN KEY (ReportID) REFERENCES Reports(ReportID),
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
+
+COMMIT;

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, Path
+from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, Field, validator
 from typing import Dict, Any, Optional, Literal
 from ..utils.database import get_db_connection
-from ..utils.auth import get_token_user, BaseResponse
+from ..utils.auth import get_user_id, BaseResponse
 
 router = APIRouter()
 
@@ -10,13 +10,7 @@ router = APIRouter()
 
 
 class VoteCreate(BaseModel):
-    voteType: str = Field(..., description="Vote type: 'upvote' or 'downvote'")
-
-    @validator('voteType')
-    def validate_vote_type(cls, v):
-        if v.lower() not in ['upvote', 'downvote']:
-            raise ValueError("Vote type must be 'upvote' or 'downvote'")
-        return v.lower()
+    voteType: Literal['upvote', 'downvote'] = Field(..., description="Type of vote (upvote or downvote)")
 
 
 class VoteCounts(BaseModel):
@@ -25,7 +19,7 @@ class VoteCounts(BaseModel):
 
 
 @router.post("/{report_id}", response_model=BaseResponse, summary="Vote on Report")
-async def vote_report(report_id: int, data: VoteCreate, current_user: int = Depends(get_token_user)):
+async def vote_report(report_id: int, data: VoteCreate, user_id: int = Depends(get_user_id)):
     """
     Vote on a report
 
@@ -40,7 +34,7 @@ async def vote_report(report_id: int, data: VoteCreate, current_user: int = Depe
         # Check if user has already voted
         cursor.execute(
             "SELECT * FROM votes WHERE reportID = %s AND userID = %s",
-            (report_id, current_user)
+            (report_id, user_id)
         )
         existing_vote = cursor.fetchone()
 
@@ -48,13 +42,13 @@ async def vote_report(report_id: int, data: VoteCreate, current_user: int = Depe
             # Update existing vote
             cursor.execute(
                 "UPDATE votes SET voteType = %s WHERE reportID = %s AND userID = %s",
-                (data.voteType, report_id, current_user)
+                (data.voteType, report_id, user_id)
             )
         else:
             # Create new vote
             cursor.execute(
                 "INSERT INTO votes (reportID, userID, voteType) VALUES (%s, %s, %s)",
-                (report_id, current_user, data.voteType)
+                (report_id, user_id, data.voteType)
             )
 
         conn.commit()
@@ -104,7 +98,7 @@ async def get_report_votes(report_id: int):
 
 
 @router.delete("/{report_id}", response_model=BaseResponse, summary="Remove Vote")
-async def remove_vote(report_id: int, current_user: int = Depends(get_token_user)):
+async def remove_vote(report_id: int, user_id: int = Depends(get_user_id)):
     """
     Remove a user's vote from a report
 
@@ -116,7 +110,7 @@ async def remove_vote(report_id: int, current_user: int = Depends(get_token_user
         cursor = conn.cursor()
         cursor.execute(
             "DELETE FROM votes WHERE reportID = %s AND userID = %s",
-            (report_id, current_user)
+            (report_id, user_id)
         )
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="No vote found")
