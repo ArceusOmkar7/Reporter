@@ -144,8 +144,9 @@ const CreatePetition = () => {
     setLocationInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCoordinateChange = (name: string, value: number) => {
-    setLocationInfo((prev) => ({ ...prev, [name]: value }));
+  // Update function to accept latitude and longitude directly
+  const handleCoordinateChange = (latitude: number, longitude: number) => {
+    setLocationInfo((prev) => ({ ...prev, latitude, longitude }));
   };
 
   // Handle image selection
@@ -313,7 +314,7 @@ const CreatePetition = () => {
         return (
           <LocationStep
             locationInfo={locationInfo}
-            onLocationInfoChange={handleLocationInfoChange}
+            onLocationChange={handleLocationInfoChange}
             onCoordinateChange={handleCoordinateChange}
           />
         );
@@ -321,8 +322,14 @@ const CreatePetition = () => {
         return (
           <ImagesStep
             images={images}
-            onImageSelect={handleImageSelect}
-            onRemoveImage={removeImage}
+            onImageChange={(files) => {
+              const newFiles = files.map((file) => ({
+                file,
+                preview: URL.createObjectURL(file),
+              }));
+              setImages((prev) => [...prev, ...newFiles]);
+            }}
+            onRemoveNewImage={removeImage}
             basicInfo={basicInfo}
             locationInfo={locationInfo}
           />
@@ -337,7 +344,7 @@ const CreatePetition = () => {
       <Header />
       <main className="flex-1 container max-w-2xl mx-auto px-4 py-10">
         <div className="mb-8">
-          <FormProgressIndicator currentStep={step} />
+          <FormProgressIndicator currentStep={step} totalSteps={3} />
         </div>
 
         <Card className="bg-gray-900/30 border-gray-800">
@@ -353,7 +360,7 @@ const CreatePetition = () => {
             <FormNavigation
               currentStep={step}
               totalSteps={3}
-              onPrevious={prevStep}
+              onPrev={prevStep}
               onNext={nextStep}
               onSubmit={handleSubmit}
               onCancel={() => navigate(-1)}

@@ -64,7 +64,7 @@ const SignIn = () => {
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
-                    placeholder="johndoe"
+                    placeholder="Enter Username"
                     required
                     className="bg-black border-gray-700 pr-10"
                   />
@@ -93,6 +93,7 @@ const SignIn = () => {
                   id="password"
                   name="password"
                   type="password"
+                  placeholder="Enter Password"
                   value={formData.password}
                   onChange={handleChange}
                   required
