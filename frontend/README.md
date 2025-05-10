@@ -2,142 +2,168 @@
 
 ## Overview
 
-This is the frontend for the Reporter application, built with React, TypeScript, and Shadcn UI components. It provides a modern, responsive user interface for submitting reports, browsing petitions, and interacting with the community.
+This is the frontend for the Reporter application, built with React, TypeScript, and Vite. It provides a modern, responsive user interface for submitting and managing reports, user authentication, and interacting with the backend API.
 
-## Features
+## Tech Stack
 
-1. **User Authentication**
-   - Sign up and sign in functionality
-   - Persistent authentication state using localStorage
-   - Protected routes for authenticated features
-
-2. **Report Browsing**
-   - Browse all public reports with search functionality
-   - Filter reports by category, location, and date range
-   - Sort reports by various criteria
-
-3. **Report Details**
-   - View detailed information about each report
-   - Interactive map showing report location
-   - Upvote/downvote functionality
-   - Image gallery for attached photos
-
-4. **Report Creation**
-   - Multi-step form with progress indicator
-   - Rich text editor for detailed descriptions
-   - Category selection from predefined options
-   - Interactive map for precise location selection
-   - Multiple image uploads with previews
-
-5. **Report Editing**
-   - Edit existing reports with the same interface as creation
-   - Update location with interactive map selection
-   - Add or remove images from reports
-
-6. **Interactive Map Features**
-   - OpenStreetMap integration with Leaflet.js
-   - Current location detection and centering
-   - Click-to-select location functionality
-   - Draggable marker for precise positioning
-   - Real-time coordinate updates
-
-7. **Responsive Design**
-   - Mobile-first approach with responsive components
-   - Adaptive layout for different screen sizes
-   - Touch-friendly interactions for mobile users
-
-## Technology Stack
-
-- **Framework**: React with TypeScript
-- **UI Components**: Shadcn UI (based on Tailwind CSS)
-- **State Management**: React Context API and React Query
-- **Routing**: React Router
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: React Context API
 - **Form Handling**: React Hook Form
-- **Mapping**: Leaflet.js with OpenStreetMap
-- **API Client**: Custom fetch-based client
+- **API Integration**: Axios
+- **Type Safety**: TypeScript
+- **Code Quality**: ESLint
 
-## Getting Started
+## Completed Features
 
-### Prerequisites
+1. **Authentication**
+   - User registration with form validation
+   - Login functionality
+   - Protected routes
+   - Auth context for state management
 
-- Node.js (v16.0.0 or higher)
-- npm (v7.0.0 or higher) or Bun
+2. **User Interface**
+   - Modern, responsive design using Tailwind CSS
+   - Component library with shadcn/ui
+   - Custom UI components:
+     - ReportCard for displaying reports
+     - ImageWithFallback for handling image loading
+     - Layout components for consistent page structure
+     - Header with navigation
 
-### Installation
+3. **Pages**
+   - Home page (`Index.tsx`)
+   - Authentication pages:
+     - Sign In (`SignIn.tsx`)
+     - Sign Up (`SignUp.tsx`)
+   - Report management:
+     - Create Report (`CreatePetition.tsx`)
+     - Edit Report (`EditPetition.tsx`)
+     - Report Details (`PetitionDetails.tsx`)
+     - Browse Reports (`BrowsePetitions.tsx`)
+   - User Profile (`UserProfile.tsx`)
+
+4. **API Integration**
+   - Comprehensive API service (`api-service.ts`)
+   - Type definitions for API responses (`api-types.ts`)
+   - API configuration management (`api-config.ts`)
+   - Error handling and response processing
+
+5. **Form Handling**
+   - Form validation
+   - File upload support
+   - Error messaging
+   - Loading states
+
+## Pending Tasks
+
+1. **User Experience**
+   - Add loading skeletons
+   - Implement infinite scrolling for reports
+   - Add pull-to-refresh functionality
+   - Improve error messages and notifications
+   - Add success/error toasts
+
+2. **Features**
+   - Implement report search functionality
+   - Add report filtering options
+   - Add report sorting capabilities
+   - Implement report sharing
+   - Add report comments section
+   - Add user notifications
+
+3. **Performance**
+   - Implement code splitting
+   - Add lazy loading for images
+   - Optimize bundle size
+   - Add service worker for offline support
+   - Implement caching strategies
+
+4. **Testing**
+   - Add unit tests for components
+   - Add integration tests
+   - Add end-to-end tests
+   - Set up testing pipeline
+   - Add performance testing
+
+5. **Accessibility**
+   - Add ARIA labels
+   - Implement keyboard navigation
+   - Add screen reader support
+   - Improve color contrast
+   - Add focus management
+
+6. **Documentation**
+   - Add component documentation
+   - Create style guide
+   - Document API integration
+   - Add contribution guidelines
+   - Create deployment guide
+
+## Installation
+
+1. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   bun install
+   ```
+
+2. Create a `.env` file in the root directory with:
+   ```
+   VITE_API_URL=http://localhost:8000
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   bun dev
+   ```
+
+## Development
+
+- The application uses TypeScript for type safety
+- Components are organized in the `src/components` directory
+- Pages are in the `src/pages` directory
+- API integration is handled in `src/lib`
+- Global state is managed through contexts in `src/contexts`
+
+## Building for Production
 
 ```bash
-# Install dependencies
-npm install
-# or
-bun install
-```
-
-### Development
-
-```bash
-# Start development server
-npm run dev
-# or
-bun dev
-```
-
-The development server will start at `http://localhost:5173`
-
-### Building for Production
-
-```bash
-# Build the application
 npm run build
 # or
-bun run build
+yarn build
+# or
+bun build
 ```
+
+The build output will be in the `dist` directory.
 
 ## Project Structure
 
-- `src/`
-  - `components/` - Reusable UI components
-  - `contexts/` - React context providers
-  - `hooks/` - Custom React hooks
-  - `lib/` - Utility functions and API services
-  - `pages/` - Page components
-  - `App.tsx` - Main application component
-  - `main.tsx` - Entry point
+```
+frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── contexts/       # React contexts for state management
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/           # Utilities and API integration
+│   ├── pages/         # Page components
+│   └── App.tsx        # Root component
+├── public/            # Static assets
+└── package.json       # Dependencies and scripts
+```
 
-## Usage
-
-### Creating a Report
-
-1. Navigate to the "Create Report" page
-2. Fill in the basic information (title, description, category)
-3. Add location details:
-   - Enter address information manually
-   - Click "Use my current location" to automatically detect your location
-   - Use the interactive map to select a precise location by clicking or dragging the marker
-   - The latitude and longitude coordinates will update automatically
-4. Upload images (optional)
-5. Submit the report
-
-### Editing a Report
-
-1. Navigate to a report you've created
-2. Click the "Edit" button
-3. Update information as needed
-4. For location updates:
-   - Use the interactive map to select a new location
-   - The coordinates will update in real-time
-   - All location changes are saved when you submit the form
-5. Save your changes
-
-## Known Issues
-
-- The map may not display properly in some older browsers
-- Location services require HTTPS in production environments
-- Current location detection may be less accurate on some mobile devices
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add some feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+## Notes
+- The application uses Vite for fast development and building
+- Tailwind CSS is used for styling with shadcn/ui components
+- API integration is handled through a centralized service
+- Form validation is implemented using React Hook Form
+- The application is fully responsive and mobile-friendly

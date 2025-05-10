@@ -7,52 +7,105 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
 ## Completed Tasks
 
 1. **Database Setup**
-   - Created the database schema in `table_creation.sql`.
-   - Established database connection in `utils/database.py`.
+   - Created the database schema in `table_creation.sql`
+   - Added sample data in `table_insertion.sql`
+   - Established database connection in `utils/database.py`
 
-2. **Simple Authentication**
-   - Implemented simple username/password authentication (no JWT tokens)
-   - Passwords are stored as plain text for simplicity
-   - All API endpoints are publicly accessible without authentication
-   - No bearer token required for API access
+2. **Authentication System**
+   - Implemented user registration and login endpoints
+   - Basic username/password authentication
+   - User profile management
+   - No JWT tokens or session management
 
-3. **Models**
-   - Defined database models for:
+3. **Core Models**
+   - Implemented comprehensive data models:
      - Categories (`app/models/Categories.py`)
-     - Images (`app/models/Images.py`)
-     - Location (`app/models/Location.py`)
-     - Reports (`app/models/Reports.py`)
-     - User (`app/models/User.py`)
-     - UserInfo (`app/models/UserInfo.py`)
-     - Votes (`app/models/Votes.py`)
-   - Added Pydantic models for request/response validation and documentation
+     - Images (`app/models/Images.py`) with file handling
+     - Location (`app/models/Location.py`) with geospatial support
+     - Reports (`app/models/Reports.py`) with status tracking
+     - User (`app/models/User.py`) with profile management
+     - UserInfo (`app/models/UserInfo.py`) for extended user data
+     - Votes (`app/models/Votes.py`) for report voting
 
 4. **API Endpoints**
-   - Created comprehensive RESTful API endpoints for:
+   - Implemented RESTful endpoints for:
      - Authentication (`app/routes/auth.py`)
+       - Registration
+       - Login
+       - Profile management
      - Categories (`app/routes/category.py`)
-     - Images (`app/routes/image.py`) with file upload support
+       - CRUD operations
+       - Category listing
+     - Images (`app/routes/image.py`)
+       - File upload with validation
+       - Image retrieval
+       - Image deletion
      - Locations (`app/routes/location.py`)
-     - Reports (`app/routes/report.py`) with search functionality
-     - Users (`app/routes/user.py`) with public access to all user data
+       - Location management
+       - Geospatial queries
+     - Reports (`app/routes/report.py`)
+       - Report submission
+       - Report listing and filtering
+       - Report status updates
+     - Users (`app/routes/user.py`)
+       - User profile management
+       - User listing
      - Votes (`app/routes/vote.py`)
-   - Added a health check endpoint at the base URL (`/`)
+       - Vote submission
+       - Vote counting
+   - Health check endpoint at root URL
 
-5. **Framework Migration**
-   - Successfully migrated from Flask to FastAPI
-   - Enhanced performance with asynchronous request handling
-   - Implemented proper dependency injection patterns
-   - Added automatic API documentation using OpenAPI
+5. **Framework Features**
+   - FastAPI implementation with async support
+   - Automatic API documentation (Swagger/ReDoc)
+   - Request/response validation with Pydantic
+   - Error handling middleware
+   - File upload handling
+   - Database connection pooling
 
-6. **Documentation**
-   - Added detailed API documentation with Swagger UI and ReDoc integration
-   - Documented request/response models with field descriptions
-   - Improved code documentation with detailed docstrings
+## Pending Tasks
 
-7. **Error Handling**
-   - Implemented comprehensive error responses
-   - Added request validation using Pydantic models
-   - Created consistent error response format across all endpoints
+1. **Security Enhancements**
+   - Implement JWT token authentication
+   - Add password hashing
+   - Add rate limiting
+   - Implement CORS policies
+   - Add input sanitization
+
+2. **Testing**
+   - Unit tests for all endpoints
+   - Integration tests
+   - API endpoint testing
+   - Database migration tests
+   - Load testing
+
+3. **Performance Optimization**
+   - Implement caching layer
+   - Add database indexing
+   - Optimize query performance
+   - Add connection pooling
+   - Implement request throttling
+
+4. **Monitoring and Logging**
+   - Add structured logging
+   - Implement error tracking
+   - Add performance monitoring
+   - Set up health checks
+   - Add usage analytics
+
+5. **Documentation**
+   - Add detailed API documentation
+   - Create deployment guide
+   - Add contribution guidelines
+   - Document database schema
+   - Add code comments
+
+6. **Features**
+   - Add report search functionality
+   - Implement report filtering
+   - Add user notifications
+   - Add report comments
+   - Implement report sharing
 
 ## Installation
 
@@ -73,6 +126,7 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
 4. Set up the MySQL database:
    - Create a database named `reporter_py`
    - Run the SQL commands in `table_creation.sql`
+   - Run the sample data in `table_insertion.sql`
    - Update database credentials in `app/config/config.py` if needed
 
 ## Running the Server
@@ -84,85 +138,26 @@ python run.py
 
 The API will be available at `http://localhost:8000`
 
-Access the health check endpoint at `http://localhost:8000/` to verify the API is running correctly.
-
 ## API Documentation
 
-FastAPI automatically generates interactive API documentation. After starting the server, access:
-- Swagger UI: `http://localhost:8000/docs` - Interactive documentation with try-it-now functionality
-- ReDoc: `http://localhost:8000/redoc` - Alternative documentation format
+Access the API documentation at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
-### Using Swagger UI for API Testing
+## Technical Stack
 
-1. Go to `http://localhost:8000/docs`
-2. Register a new user using the `/api/auth/register` endpoint
-3. Login with your username and password using the `/api/auth/login` endpoint
-4. All API endpoints are publicly accessible without authentication
-5. The users endpoint shows information for all users through `/api/user/all`
-
-### Authentication Endpoints
-
-#### POST /api/auth/register
-- **Description**: Register a new user.
-- **Request Body**: Username, password, name, email, contact info
-- **Response**: User ID and success message
-
-#### POST /api/auth/login
-- **Description**: Authenticate user with username and password
-- **Request Body**: Username and password
-- **Response**: User information
-
-### User Endpoints
-
-#### GET /api/user/all
-- **Description**: Get all users in the system
-- **Response**: List of all users with their profiles
-
-#### GET /api/user/profile/{user_id}
-- **Description**: Get user profile by ID
-- **Response**: User profile details
-
-### Test Endpoints
-
-#### GET /
-- **Description**: API health check endpoint
-- **Response**: API status information with timestamp
-
-### Data Endpoints
-
-All data endpoints follow RESTful principles with consistent patterns:
-- GET endpoints for retrieving data
-- POST endpoints for creating new resources
-- PUT endpoints for updating existing resources
-- DELETE endpoints for removing resources
-
-All endpoints are public and don't require authentication.
-
-## Pending Tasks
-
-1. **Testing**
-   - Write comprehensive unit tests for all endpoints
-   - Implement integration tests for critical user flows
-   - Set up automated testing pipeline
-
-2. **Frontend Integration**
-   - Complete integration with frontend application
-   - Add client-side error handling for API responses
-
-## Technical Details
-
-- **Authentication**: Simple username/password authentication
-- **Password Storage**: Plain text (no encryption)
-- **Database**: MySQL with connection pooling
-- **File Storage**: Local file system with secure naming
-- **API Documentation**: OpenAPI 3.0 (Swagger/ReDoc)
-- **Framework**: FastAPI with asynchronous request handling
-- **Validation**: Pydantic models with field validation
+- **Framework**: FastAPI
+- **Database**: MySQL
+- **File Storage**: Local filesystem
+- **Documentation**: OpenAPI/Swagger
+- **Validation**: Pydantic
+- **Authentication**: Basic auth (to be upgraded)
+- **File Handling**: FastAPI UploadFile
+- **Error Handling**: Custom middleware
 
 ## Notes
-- All API endpoints are publicly accessible
-- All user data is publicly accessible through the API
-- Passwords are stored as plain text for simplicity
-- File uploads are stored in the `uploads` directory with secure filenames
-- All endpoints return standardized response formats
-- Error responses include specific error details for debugging
+- All endpoints are currently public
+- Passwords are stored in plain text (to be fixed)
+- File uploads are stored in the `uploads` directory
+- Database credentials should be configured in `config.py`
+- API responses follow a consistent format
