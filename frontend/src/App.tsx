@@ -14,10 +14,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
-import BrowsePetitions from "./pages/BrowsePetitions";
-import PetitionDetails from "./pages/PetitionDetails";
-import CreatePetition from "./pages/CreatePetition";
-import EditPetition from "./pages/EditPetition";
+import BrowseReports from "./pages/BrowseReports";
+import ReportDetails from "./pages/ReportDetails";
+import CreateReport from "./pages/CreateReport";
+import EditReport from "./pages/EditReport";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/ReportCard";
@@ -48,12 +48,12 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/browse" element={<BrowsePetitions />} />
-              <Route path="/reports/:id" element={<PetitionDetails />} />
+              <Route path="/browse" element={<BrowseReports />} />
+              <Route path="/reports/:id" element={<ReportDetails />} />
 
               {/* Report creation/editing routes */}
-              <Route path="/new" element={<CreatePetition />} />
-              <Route path="/edit/:id" element={<EditPetition />} />
+              <Route path="/new" element={<CreateReport />} />
+              <Route path="/edit/:id" element={<EditReport />} />
 
               {/* Authentication routes */}
               <Route path="/signup" element={<SignUp />} />

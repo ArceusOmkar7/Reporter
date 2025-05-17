@@ -4,13 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportAPI } from "@/lib/api-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
-import { EditPetitionForm } from "@/components/petition-edit/EditPetitionForm";
+import { EditReportForm } from "@/components/report-edit/EditReportForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
-const EditPetition = () => {
+const EditReport = () => {
   const { id } = useParams<{ id: string }>();
   const reportId = parseInt(id || "0");
   const navigate = useNavigate();
@@ -104,12 +104,12 @@ const EditPetition = () => {
       <Header />
       <main className="container px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Edit Petition</h1>
-          <EditPetitionForm report={report} reportId={reportId} />
+          <h1 className="text-3xl font-bold mb-6">Edit Report</h1>
+          <EditReportForm report={report} reportId={reportId} />
         </div>
       </main>
     </div>
   );
 };
 
-export default EditPetition;
+export default EditReport;

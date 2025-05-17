@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ThumbsUp, ThumbsDown, Calendar, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-const BrowsePetitions = () => {
+const BrowseReports = () => {
   const [searchParams, setSearchParams] = useState({
     query: "",
     category: "",
@@ -108,10 +108,10 @@ const BrowsePetitions = () => {
       <Header />
       <main className="flex-1 container px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Browse Petitions</h1>
+          <h1 className="text-3xl font-bold">Browse Reports</h1>
           <Link to="/new">
             <Button className="bg-white text-black hover:bg-gray-200">
-              Start a Petition
+              Start a Report
             </Button>
           </Link>
         </div>
@@ -122,7 +122,7 @@ const BrowsePetitions = () => {
             <div>
               <h3 className="text-lg font-medium mb-3">Search</h3>
               <Input
-                placeholder="Search petitions..."
+                placeholder="Search reports..."
                 value={searchParams.query}
                 onChange={handleSearchChange}
                 className="bg-gray-900 border-gray-700"
@@ -281,4 +281,4 @@ const BrowsePetitions = () => {
   );
 };
 
-export default BrowsePetitions;
+export default BrowseReports;

@@ -14,7 +14,7 @@ import {
 import {
   FormProgressIndicator,
   FormNavigation,
-} from "@/components/petition-form";
+} from "@/components/report-form";
 import { EditBasicInfoStep } from "./EditBasicInfoStep";
 import { EditLocationStep } from "./EditLocationStep";
 import { EditImagesStep } from "./EditImagesStep";
@@ -50,12 +50,12 @@ interface ExistingImage {
   uploadedAt?: string;
 }
 
-interface EditPetitionFormProps {
+interface EditReportFormProps {
   report: ReportDetail;
   reportId: number;
 }
 
-export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
+export function EditReportForm({ report, reportId }: EditReportFormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -227,7 +227,7 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
   // Submit form handler
   const handleSubmit = async () => {
     if (!user) {
-      toast.error("You must be signed in to update this petition");
+      toast.error("You must be signed in to update this report");
       return;
     }
 
@@ -290,15 +290,15 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
       }
 
       // Success!
-      toast.success("Petition updated successfully!");
+      toast.success("Report updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["report", reportId] });
       navigate(`/reports/${reportId}`);
     } catch (error) {
-      console.error("Failed to update petition:", error);
+      console.error("Failed to update report:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "An error occurred while updating the petition"
+          : "An error occurred while updating the report"
       );
     } finally {
       setIsSubmitting(false);
@@ -315,7 +315,7 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
       case 3:
         return "Edit Images";
       default:
-        return "Edit Petition";
+        return "Edit Report";
     }
   };
 

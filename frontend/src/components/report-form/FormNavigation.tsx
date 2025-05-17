@@ -71,7 +71,7 @@ export function FormNavigation({
             ) : (
               <>
                 <Save className="mr-1 h-4 w-4" />
-                Submit Petition
+                Submit Report
               </>
             )}
           </Button>

@@ -37,16 +37,16 @@ export const Header = () => {
       <div className="container flex items-center justify-between py-4">
         {/* Application Logo/Title */}
         <Link to="/" className="text-xl font-bold text-white">
-          PetitionHub
+          Reportr
         </Link>
 
         {/* Navigation Links */}
         <nav className="flex items-center gap-4">
           <Link to="/browse" className="text-sm text-gray-300 hover:text-white">
-            Browse Petitions
+            Browse Reports
           </Link>
           <Link to="/new" className="text-sm text-gray-300 hover:text-white">
-            Start a Petition
+            Start a Report
           </Link>
 
           {/* Authentication-dependent UI */}

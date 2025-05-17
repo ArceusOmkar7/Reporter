@@ -5,7 +5,7 @@ import { ReportCard } from "@/components/ReportCard";
 import { Header } from "@/components/Header";
 import { useToast } from "@/hooks/use-toast";
 
-const initialPetitionsData = [
+const initialReportsData = [
   {
     id: 1,
     title: "Fix the potholes on Main Street",
@@ -39,20 +39,18 @@ const initialPetitionsData = [
 ];
 
 const Index = () => {
-  const [petitionsData, setPetitionsData] = useState(initialPetitionsData);
+  const [reportsData, setReportsData] = useState(initialReportsData);
   const { toast } = useToast();
 
   const handleVote = (id: number) => {
-    setPetitionsData((prevData) =>
-      prevData.map((petition) =>
-        petition.id === id
-          ? { ...petition, votes: petition.votes + 1 }
-          : petition
+    setReportsData((prevData) =>
+      prevData.map((report) =>
+        report.id === id ? { ...report, votes: report.votes + 1 } : report
       )
     );
     toast({
       title: "Vote recorded",
-      description: "Thank you for supporting this petition!",
+      description: "Thank you for supporting this report!",
     });
   };
 
@@ -69,13 +67,12 @@ const Index = () => {
           <div className="container max-w-4xl mx-auto px-4">
             <h1 className="text-4xl font-bold mb-6">Make Your Voice Heard</h1>
             <p className="text-lg text-gray-300 mb-8">
-              Create and sign petitions to bring positive change to your
-              community
+              Create and sign reports to bring positive change to your community
             </p>
             <div className="flex justify-center gap-4">
               <Link to="/new">
                 <Button className="bg-white text-black hover:bg-gray-100 rounded-md">
-                  Start a Petition
+                  Start a Report
                 </Button>
               </Link>
               <Link to="/browse">
@@ -83,7 +80,7 @@ const Index = () => {
                   variant="outline"
                   className="bg-transparent border-gray-700 hover:bg-gray-800"
                 >
-                  Browse Petitions
+                  Browse Reports
                 </Button>
               </Link>
             </div>
@@ -93,7 +90,7 @@ const Index = () => {
         <section className="py-16 bg-gray-900/30">
           <div className="container max-w-6xl mx-auto px-4">
             <div className="flex justify-between items-center mb-10">
-              <h2 className="text-2xl font-bold">Featured Petitions</h2>
+              <h2 className="text-2xl font-bold">Featured Reports</h2>
               <Link
                 to="/browse"
                 className="text-sm text-gray-400 hover:text-white"
@@ -102,10 +99,10 @@ const Index = () => {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {petitionsData.map((petition) => (
+              {reportsData.map((report) => (
                 <ReportCard
-                  key={petition.id}
-                  {...petition}
+                  key={report.id}
+                  {...report}
                   onVote={handleVote}
                   onShowOnly={handleShowOnly}
                 />
@@ -127,9 +124,9 @@ const Index = () => {
                 <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold mb-4">
                   1
                 </div>
-                <h3 className="text-xl font-bold mb-2">Create a Petition</h3>
+                <h3 className="text-xl font-bold mb-2">Create a Report</h3>
                 <p className="text-sm text-gray-400">
-                  Sign up and create a petition about an issue you care about.
+                  Sign up and create a report about an issue you care about.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center">
@@ -138,7 +135,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Gather Support</h3>
                 <p className="text-sm text-gray-400">
-                  Share your petition and gather votes from supporters.
+                  Share your report and gather votes from supporters.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center">
@@ -147,7 +144,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Create Change</h3>
                 <p className="text-sm text-gray-400">
-                  Use your petition to advocate for meaningful change.
+                  Use your report to advocate for meaningful change.
                 </p>
               </div>
             </div>

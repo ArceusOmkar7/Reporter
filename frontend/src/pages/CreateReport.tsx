@@ -19,7 +19,7 @@ import {
   ImagesStep,
   FormProgressIndicator,
   FormNavigation,
-} from "@/components/petition-form";
+} from "@/components/report-form";
 
 // Types for form data
 interface BasicInfo {
@@ -49,7 +49,7 @@ interface ImageURL {
   url: string;
 }
 
-const CreatePetition = () => {
+const CreateReport = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
@@ -85,7 +85,7 @@ const CreatePetition = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error("You must be signed in to create a petition");
+      toast.error("You must be signed in to create a report");
       navigate("/signin", { state: { from: "/new" } });
     }
   }, [isAuthenticated, navigate]);
@@ -200,15 +200,15 @@ const CreatePetition = () => {
     if (step === 1) {
       // Validate basic info
       if (!basicInfo.title.trim()) {
-        toast.error("Please enter a title for your petition");
+        toast.error("Please enter a title for your report");
         return;
       }
       if (!basicInfo.description.trim()) {
-        toast.error("Please enter a description for your petition");
+        toast.error("Please enter a description for your report");
         return;
       }
       if (!basicInfo.category) {
-        toast.error("Please select a category for your petition");
+        toast.error("Please select a category for your report");
         return;
       }
     } else if (step === 2) {
@@ -238,7 +238,7 @@ const CreatePetition = () => {
   // Form submission handler
   const handleSubmit = async () => {
     if (!isAuthenticated || !user) {
-      toast.error("You must be signed in to create a petition");
+      toast.error("You must be signed in to create a report");
       navigate("/signin", { state: { from: "/new" } });
       return;
     }
@@ -302,12 +302,12 @@ const CreatePetition = () => {
         }
       }
 
-      toast.success("Petition created successfully!");
+      toast.success("Report created successfully!");
       navigate(`/reports/${reportID}`);
     } catch (error) {
-      console.error("Error creating petition:", error);
+      console.error("Error creating report:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to create petition"
+        error instanceof Error ? error.message : "Failed to create report"
       );
     } finally {
       setIsSubmitting(false);
@@ -404,4 +404,4 @@ const CreatePetition = () => {
   );
 };
 
-export default CreatePetition;
+export default CreateReport;

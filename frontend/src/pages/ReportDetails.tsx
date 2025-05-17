@@ -23,7 +23,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-const PetitionDetails = () => {
+const ReportDetails = () => {
   const { id } = useParams<{ id: string }>();
   const reportId = parseInt(id || "0");
   const navigate = useNavigate();
@@ -248,9 +248,7 @@ const PetitionDetails = () => {
 
           <div className="col-span-1">
             <Card className="bg-gray-900/30 border-gray-800 p-6 mb-6 sticky top-4">
-              <h3 className="text-xl font-medium mb-4">
-                Support this petition
-              </h3>
+              <h3 className="text-xl font-medium mb-4">Support this report</h3>
               <p className="text-gray-300 mb-6">
                 Show your support by upvoting this report. Your vote matters!
               </p>
@@ -323,4 +321,4 @@ const PetitionDetails = () => {
   );
 };
 
-export default PetitionDetails;
+export default ReportDetails;

@@ -32,7 +32,7 @@ export const Layout: React.FC = () => {
       {/* Footer with copyright */}
       <footer className="border-t border-gray-800 py-6 mt-12">
         <div className="container text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} PetitionHub. All rights reserved.
+          © {new Date().getFullYear()} Reportr. All rights reserved.
         </div>
       </footer>
     </div>
