@@ -94,28 +94,41 @@ export const ReportCard = ({
         <p className="text-sm text-gray-400 mb-2 line-clamp-2">{description}</p>
         <p className="text-xs text-gray-500 mb-4">Location: {location}</p>
         <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-0 h-auto hover:bg-transparent ${
-                userVote === "upvote" ? "text-green-500" : "text-gray-400"
-              }`}
-              onClick={(e) => handleVote(e, "upvote")}
-            >
-              <ThumbsUp size={15} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-0 h-auto hover:bg-transparent ${
-                userVote === "downvote" ? "text-red-500" : "text-gray-400"
-              }`}
-              onClick={(e) => handleVote(e, "downvote")}
-            >
-              <ThumbsDown size={15} />
-            </Button>
-            <span className="text-sm">{votes} votes</span>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
+                  userVote === "upvote" 
+                    ? "text-green-500 bg-green-500/10 hover:bg-green-500/20" 
+                    : "text-gray-400"
+                }`}
+                onClick={(e) => handleVote(e, "upvote")}
+              >
+                <ThumbsUp size={20} />
+              </Button>
+              <span className="text-xs text-gray-400 mt-1">Like</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
+                  userVote === "downvote" 
+                    ? "text-red-500 bg-red-500/10 hover:bg-red-500/20" 
+                    : "text-gray-400"
+                }`}
+                onClick={(e) => handleVote(e, "downvote")}
+              >
+                <ThumbsDown size={20} />
+              </Button>
+              <span className="text-xs text-gray-400 mt-1">Dislike</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-lg font-semibold text-gray-300">{votes}</span>
+              <span className="text-xs text-gray-400">votes</span>
+            </div>
           </div>
           <div className="flex gap-2">
             {showOnlyButton && (
