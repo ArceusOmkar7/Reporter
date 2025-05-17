@@ -1,6 +1,8 @@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Link as LinkIcon } from "lucide-react";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 interface ImageFile {
   file: File;
@@ -40,6 +42,7 @@ interface ImagesStepProps {
   onImageChange: (files: File[]) => void;
   onRemoveNewImage: (index: number) => void;
   onRemoveExistingImage?: (imageId: number) => void;
+  onAddImageUrl?: (url: string) => void;
   editMode?: boolean;
 }
 
@@ -49,10 +52,14 @@ export function ImagesStep({
   onImageChange,
   onRemoveNewImage,
   onRemoveExistingImage,
+  onAddImageUrl,
   basicInfo,
   locationInfo,
   editMode = false,
 }: ImagesStepProps) {
+  const [imageUrl, setImageUrl] = useState("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
@@ -60,31 +67,79 @@ export function ImagesStep({
     }
   };
 
+  const handleAddImageUrl = () => {
+    if (imageUrl && onAddImageUrl) {
+      onAddImageUrl(imageUrl);
+      setImageUrl("");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-2">
+      <div className="grid gap-4">
         <Label htmlFor="images">
           {editMode ? "Add More Images" : "Upload Images (Optional)"}
         </Label>
-        <div className="border border-dashed border-gray-700 rounded-md p-6 text-center">
-          <input
-            type="file"
-            id="images"
-            accept="image/*"
-            multiple
-            onChange={handleImageSelect}
-            className="hidden"
-          />
-          <label htmlFor="images">
-            <div className="flex flex-col items-center cursor-pointer">
-              <ImagePlus size={40} className="text-gray-500 mb-2" />
-              <p className="text-gray-400 mb-1">Click to select images</p>
-              <p className="text-gray-500 text-sm">
-                PNG, JPG, JPEG up to 5MB each
-              </p>
-            </div>
-          </label>
+
+        <div className="flex space-x-2 mb-2">
+          <Button
+            type="button"
+            variant={showUrlInput ? "secondary" : "default"}
+            onClick={() => setShowUrlInput(false)}
+            className="flex-1"
+          >
+            <ImagePlus className="mr-2 h-4 w-4" />
+            Upload Files
+          </Button>
+          <Button
+            type="button"
+            variant={showUrlInput ? "default" : "secondary"}
+            onClick={() => setShowUrlInput(true)}
+            className="flex-1"
+          >
+            <LinkIcon className="mr-2 h-4 w-4" />
+            Image URL
+          </Button>
         </div>
+
+        {showUrlInput ? (
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Enter image URL"
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              onClick={handleAddImageUrl}
+              disabled={!imageUrl}
+            >
+              Add URL
+            </Button>
+          </div>
+        ) : (
+          <div className="border border-dashed border-gray-700 rounded-md p-6 text-center">
+            <input
+              type="file"
+              id="images"
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <label htmlFor="images">
+              <div className="flex flex-col items-center cursor-pointer">
+                <ImagePlus size={40} className="text-gray-500 mb-2" />
+                <p className="text-gray-400 mb-1">Click to select images</p>
+                <p className="text-gray-500 text-sm">
+                  PNG, JPG, JPEG up to 5MB each
+                </p>
+              </div>
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Existing images section (only in edit mode) */}

@@ -45,6 +45,10 @@ interface ImageFile {
   preview: string;
 }
 
+interface ImageURL {
+  url: string;
+}
+
 const CreatePetition = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -73,6 +77,7 @@ const CreatePetition = () => {
 
   // Selected images for upload
   const [images, setImages] = useState<ImageFile[]>([]);
+  const [imageUrls, setImageUrls] = useState<ImageURL[]>([]);
 
   // Form submission status
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -119,10 +124,17 @@ const CreatePetition = () => {
     },
   });
 
-  // Mutation to upload image
+  // Mutation to upload image file
   const imageMutation = useMutation({
     mutationFn: ({ reportId, file }: { reportId: number; file: File }) => {
       return ImageAPI.upload(reportId, file, user?.id);
+    },
+  });
+
+  // Mutation to upload image URL
+  const imageUrlMutation = useMutation({
+    mutationFn: ({ reportId, url }: { reportId: number; url: string }) => {
+      return ImageAPI.uploadUrl(reportId, url, user?.id);
     },
   });
 
@@ -149,16 +161,19 @@ const CreatePetition = () => {
     setLocationInfo((prev) => ({ ...prev, latitude, longitude }));
   };
 
-  // Handle image selection
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const newFiles = Array.from(e.target.files).map((file) => ({
+  // Handle image file selection
+  const handleImageFiles = (files: File[]) => {
+    const newFiles = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
     }));
 
     setImages((prev) => [...prev, ...newFiles]);
+  };
+
+  // Handle image URL addition
+  const handleAddImageUrl = (url: string) => {
+    setImageUrls((prev) => [...prev, { url }]);
   };
 
   // Remove an image
@@ -168,6 +183,15 @@ const CreatePetition = () => {
       URL.revokeObjectURL(newImages[index].preview);
       newImages.splice(index, 1);
       return newImages;
+    });
+  };
+
+  // Remove a URL image
+  const removeUrlImage = (index: number) => {
+    setImageUrls((prev) => {
+      const newUrls = [...prev];
+      newUrls.splice(index, 1);
+      return newUrls;
     });
   };
 
@@ -254,7 +278,7 @@ const CreatePetition = () => {
         throw new Error("Failed to create report");
       }
 
-      // 3. Upload images (if any)
+      // 3. Upload file images (if any)
       if (images.length > 0) {
         toast.info(`Uploading ${images.length} images...`);
 
@@ -262,6 +286,18 @@ const CreatePetition = () => {
           await imageMutation.mutateAsync({
             reportId: reportID,
             file: imageItem.file,
+          });
+        }
+      }
+
+      // 4. Add URL images (if any)
+      if (imageUrls.length > 0) {
+        toast.info(`Adding ${imageUrls.length} image URLs...`);
+
+        for (const imageItem of imageUrls) {
+          await imageUrlMutation.mutateAsync({
+            reportId: reportID,
+            url: imageItem.url,
           });
         }
       }
@@ -293,13 +329,13 @@ const CreatePetition = () => {
       case 2:
         return "Location Details";
       case 3:
-        return "Add Images (Optional)";
+        return "Add Images";
       default:
-        return "Create Petition";
+        return "";
     }
   };
 
-  // Render the current step content
+  // Render content for current step
   const renderStepContent = () => {
     switch (step) {
       case 1:
@@ -322,14 +358,9 @@ const CreatePetition = () => {
         return (
           <ImagesStep
             images={images}
-            onImageChange={(files) => {
-              const newFiles = files.map((file) => ({
-                file,
-                preview: URL.createObjectURL(file),
-              }));
-              setImages((prev) => [...prev, ...newFiles]);
-            }}
+            onImageChange={handleImageFiles}
             onRemoveNewImage={removeImage}
+            onAddImageUrl={handleAddImageUrl}
             basicInfo={basicInfo}
             locationInfo={locationInfo}
           />

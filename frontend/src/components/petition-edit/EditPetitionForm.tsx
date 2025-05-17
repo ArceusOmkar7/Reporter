@@ -18,7 +18,7 @@ import {
 import { EditBasicInfoStep } from "./EditBasicInfoStep";
 import { EditLocationStep } from "./EditLocationStep";
 import { EditImagesStep } from "./EditImagesStep";
-import { ReportDetail } from "@/lib/api-types";
+import { ReportDetail, ReportCreate } from "@/lib/api-types";
 // Types for form data
 interface BasicInfo {
   title: string;
@@ -57,101 +57,77 @@ interface EditPetitionFormProps {
 
 export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  // Current form step
-  const [step, setStep] = useState<number>(1);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
-  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form data for each step
+  // Form data state
   const [basicInfo, setBasicInfo] = useState<BasicInfo>({
-    title: "",
-    description: "",
-    category: "",
+    title: report.title,
+    description: report.description,
+    category:
+      report.categoryName && report.categoryID
+        ? `${report.categoryName}|${report.categoryID}`
+        : `${report.categoryID}|${report.categoryID}`,
   });
 
   const [locationInfo, setLocationInfo] = useState<LocationInfo>({
-    street: "",
+    street: report.street || "",
     district: "",
-    city: "",
-    state: "",
-    country: "",
+    city: report.city || "",
+    state: report.state || "",
+    country: report.country || "India",
     postalCode: "",
     landmark: "",
-    latitude: 0,
-    longitude: 0,
+    latitude: report.latitude || 0,
+    longitude: report.longitude || 0,
   });
 
+  // Images state
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>(
+    report.images || []
+  );
   const [newImages, setNewImages] = useState<ImageFile[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
-  // Load initial form data
-  useEffect(() => {
-    if (report) {
-      // Set form data based on the existing report
-      setBasicInfo({
-        title: report.title,
-        description: report.description,
-        category: report.categoryID.toString(),
-      });
-
-      setLocationInfo({
-        street: report.street || "",
-        district: "", // Not available in ReportDetail
-        city: report.city || "",
-        state: report.state || "",
-        country: report.country || "",
-        postalCode: "", // Not available in ReportDetail
-        landmark: "", // Not available in ReportDetail
-        latitude: report.latitude || 0,
-        longitude: report.longitude || 0,
-      });
-
-      if (report.images && report.images.length > 0) {
-        setExistingImages(report.images);
-      }
-    }
-  }, [report]);
-
-  // Mutation to update report
-  const reportMutation = useMutation({
-    mutationFn: ({
-      title,
-      description,
-      categoryID,
-    }: {
-      title: string;
-      description: string;
-      categoryID: number;
-    }) => {
-      return ReportAPI.update(
-        reportId,
-        {
-          title,
-          description,
-          categoryID,
-          locationID: report.locationID,
-        },
+  // Mutation to update location
+  const updateLocationMutation = useMutation({
+    mutationFn: (
+      locationData: Partial<LocationInfo> & { locationID: number }
+    ) => {
+      return LocationAPI.update(
+        locationData.locationID,
+        locationData,
         user?.id
       );
     },
-  });
-
-  // Mutation to update location
-  const locationMutation = useMutation({
-    mutationFn: (
-      locationData: Omit<LocationInfo, "landmark"> & { landmark?: string }
-    ) => {
-      return LocationAPI.update(report.locationID, locationData, user?.id);
+    onSuccess: () => {
+      console.log("Location updated successfully");
+    },
+    onError: (error) => {
+      console.error("Error updating location:", error);
     },
   });
 
-  // Mutation for images
-  const imageMutation = useMutation({
-    mutationFn: ({ reportId, file }: { reportId: number; file: File }) => {
-      return ImageAPI.upload(reportId, file, user?.id);
+  // Mutation to update report
+  const updateReportMutation = useMutation({
+    mutationFn: ({
+      reportId,
+      reportData,
+    }: {
+      reportId: number;
+      reportData: Partial<ReportCreate>;
+    }) => {
+      return ReportAPI.update(reportId, reportData, user?.id);
+    },
+    onSuccess: () => {
+      console.log("Report updated successfully");
+    },
+    onError: (error) => {
+      console.error("Error updating report:", error);
     },
   });
 
@@ -160,127 +136,190 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
     mutationFn: (imageId: number) => {
       return ImageAPI.delete(imageId, user?.id);
     },
+    onSuccess: () => {
+      console.log("Image deleted successfully");
+    },
+    onError: (error) => {
+      console.error("Error deleting image:", error);
+    },
   });
 
-  // Navigate between steps
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  // Mutation to upload images
+  const uploadImageMutation = useMutation({
+    mutationFn: ({ file, reportId }: { file: File; reportId: number }) => {
+      return ImageAPI.upload(reportId, file, user?.id);
+    },
+    onSuccess: () => {
+      console.log("Image uploaded successfully");
+    },
+    onError: (error) => {
+      console.error("Error uploading image:", error);
+    },
+  });
 
-  // Form validation for each step
-  const isStepValid = () => {
-    switch (step) {
-      case 1:
-        return (
-          basicInfo.title.trim() !== "" &&
-          basicInfo.description.trim() !== "" &&
-          basicInfo.category !== ""
-        );
-      case 2:
-        return (
-          locationInfo.street.trim() !== "" &&
-          locationInfo.city.trim() !== "" &&
-          locationInfo.state.trim() !== "" &&
-          locationInfo.country.trim() !== ""
-        );
-      case 3:
-        return true; // Images are optional
-      default:
-        return false;
+  // Mutation to add URL images
+  const addImageUrlMutation = useMutation({
+    mutationFn: ({ url, reportId }: { url: string; reportId: number }) => {
+      return ImageAPI.uploadUrl(reportId, url, user?.id);
+    },
+    onSuccess: () => {
+      console.log("Image URL added successfully");
+    },
+    onError: (error) => {
+      console.error("Error adding image URL:", error);
+    },
+  });
+
+  // Handle form step navigation
+  const nextStep = () => {
+    if (isStepValid()) {
+      setStep((prev) => Math.min(prev + 1, 3));
+    } else {
+      // Show appropriate validation error
+      if (step === 1) {
+        toast.error("Please complete all required fields in Basic Information");
+      } else if (step === 2) {
+        toast.error("Please complete all required fields in Location");
+      }
     }
   };
 
-  // Handle form submission
+  const prevStep = () => {
+    setStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  // Validate current step
+  const isStepValid = () => {
+    if (step === 1) {
+      return (
+        basicInfo.title.trim() !== "" &&
+        basicInfo.description.trim() !== "" &&
+        basicInfo.category !== ""
+      );
+    }
+    if (step === 2) {
+      return (
+        locationInfo.street.trim() !== "" &&
+        locationInfo.city.trim() !== "" &&
+        locationInfo.state.trim() !== "" &&
+        locationInfo.country.trim() !== ""
+      );
+    }
+    return true;
+  };
+
+  // Handle adding image URL
+  const handleAddImageUrl = (url: string) => {
+    setImageUrls((prev) => [...prev, url]);
+
+    // Immediately display the image in the UI by adding it to existingImages
+    // with a temporary ID
+    const tempImage: ExistingImage = {
+      imageID: -Date.now(), // Negative ID to avoid conflicts with real IDs
+      imageURL: url,
+      reportID: reportId,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    setExistingImages((prev) => [...prev, tempImage]);
+  };
+
+  // Submit form handler
   const handleSubmit = async () => {
-    if (!isAuthenticated) {
-      toast("Please sign in to update a petition");
-      navigate("/signin");
+    if (!user) {
+      toast.error("You must be signed in to update this petition");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Get category ID from selected option
-      const categoryID = parseInt(basicInfo.category);
+      // Parse the category ID from the format "categoryName|categoryID"
+      let categoryID: number;
 
-      // 1. Update the location data
-      await locationMutation.mutateAsync({
-        street: locationInfo.street,
-        district: locationInfo.district,
-        city: locationInfo.city,
-        state: locationInfo.state,
-        country: locationInfo.country,
-        postalCode: locationInfo.postalCode,
-        landmark: locationInfo.landmark || undefined,
-        latitude: locationInfo.latitude,
-        longitude: locationInfo.longitude,
-      });
-
-      // 2. Update the report
-      await reportMutation.mutateAsync({
-        title: basicInfo.title,
-        description: basicInfo.description,
-        categoryID,
-      });
-
-      // 3. Delete marked images
-      if (imagesToDelete.length > 0) {
-        toast.info(`Removing ${imagesToDelete.length} images...`);
-
-        for (const imageId of imagesToDelete) {
-          await deleteImageMutation.mutateAsync(imageId);
-        }
+      if (basicInfo.category.includes("|")) {
+        const categoryParts = basicInfo.category.split("|");
+        categoryID = parseInt(categoryParts[1]);
+      } else {
+        // Fallback if the format is not as expected
+        categoryID = parseInt(basicInfo.category);
       }
 
-      // 4. Upload new images (if any)
-      if (newImages.length > 0) {
-        toast.info(`Uploading ${newImages.length} images...`);
-
-        for (const imageItem of newImages) {
-          await imageMutation.mutateAsync({
-            reportId,
-            file: imageItem.file,
-          });
-        }
+      if (isNaN(categoryID)) {
+        console.error("Invalid category format:", basicInfo.category);
+        toast.error("Invalid category format. Please select a valid category.");
+        setIsSubmitting(false);
+        return;
       }
 
-      // 5. Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["report", reportId] });
+      // 1. Update location
+      await updateLocationMutation.mutateAsync({
+        locationID: report.locationID,
+        ...locationInfo,
+      });
 
+      // 2. Update report
+      await updateReportMutation.mutateAsync({
+        reportId,
+        reportData: {
+          title: basicInfo.title,
+          description: basicInfo.description,
+          categoryID,
+        },
+      });
+
+      // 3. Handle images to delete - skip temporary images (which have negative IDs)
+      for (const imageId of imagesToDelete.filter((id) => id > 0)) {
+        await deleteImageMutation.mutateAsync(imageId);
+      }
+
+      // 4. Upload new images
+      for (const imageItem of newImages) {
+        await uploadImageMutation.mutateAsync({
+          reportId,
+          file: imageItem.file,
+        });
+      }
+
+      // 5. Add URL images
+      for (const url of imageUrls) {
+        await addImageUrlMutation.mutateAsync({
+          reportId,
+          url,
+        });
+      }
+
+      // Success!
       toast.success("Petition updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["report", reportId] });
       navigate(`/reports/${reportId}`);
     } catch (error) {
-      console.error("Error updating petition:", error);
+      console.error("Failed to update petition:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to update petition"
+        error instanceof Error
+          ? error.message
+          : "An error occurred while updating the petition"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Clean up object URLs when component unmounts
-  useEffect(() => {
-    return () => {
-      newImages.forEach((image) => URL.revokeObjectURL(image.preview));
-    };
-  }, [newImages]);
-
   // Get title for current step
   const getStepTitle = () => {
     switch (step) {
       case 1:
-        return "Basic Information";
+        return "Edit Basic Information";
       case 2:
-        return "Location Details";
+        return "Edit Location Details";
       case 3:
-        return "Manage Images";
+        return "Edit Images";
       default:
         return "Edit Petition";
     }
   };
 
-  // Render the current step content
+  // Render content for current step
   const renderStepContent = () => {
     switch (step) {
       case 1:
@@ -305,6 +344,7 @@ export function EditPetitionForm({ report, reportId }: EditPetitionFormProps) {
             imagesToDelete={imagesToDelete}
             setNewImages={setNewImages}
             setImagesToDelete={setImagesToDelete}
+            onAddImageUrl={handleAddImageUrl}
             basicInfo={basicInfo}
             locationInfo={locationInfo}
           />

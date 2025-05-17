@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   IMAGE: {
     GET: (reportId: number) => `/api/image/${reportId}`,
     UPLOAD: (reportId: number) => `/api/image/${reportId}`,
+    UPLOAD_URL: (reportId: number) => `/api/image/${reportId}/url`,
     DELETE: (id: number) => `/api/image/${id}`,
   },
   // Votes

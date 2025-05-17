@@ -351,6 +351,22 @@ export const ImageAPI = {
     return await response.json();
   },
 
+  // Upload an image from URL for a report
+  uploadUrl: async (
+    reportId: number,
+    imageUrl: string,
+    userId?: number
+  ): Promise<ImageResponse> => {
+    const queryString = userId ? `?user_id=${userId}` : "";
+    return apiRequest<ImageResponse>(
+      `${API_ENDPOINTS.IMAGE.UPLOAD_URL(reportId)}${queryString}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ image_url: imageUrl }),
+      }
+    );
+  },
+
   // Delete an image
   delete: async (imageId: number, userId?: number): Promise<BaseResponse> => {
     const queryString = userId ? `?user_id=${userId}` : "";
