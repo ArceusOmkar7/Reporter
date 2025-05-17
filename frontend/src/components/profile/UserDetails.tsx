@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ import * as z from "zod";
 import { UserProfileResponse } from "../../lib/api-types";
 import { UserAPI } from "../../lib/api-service";
 import { useToast } from "../ui/use-toast";
-import { Loader2, Save, Mail, Phone, User as UserIcon } from "lucide-react";
+import { Loader2, Save, Mail, Phone, User as UserIcon, Trash2 } from "lucide-react";
 
 // Interface for component props
 interface UserDetailsProps {
@@ -36,12 +36,9 @@ const userFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   middleName: z.string().optional(),
-  email: z.string().email("Invalid email address"),
-  contactNumber: z
-    .string()
-    .min(10, "Contact number must be at least 10 characters"),
-  bio: z.string().max(200, "Bio must be less than 200 characters").optional(),
-  profilePicture: z.instanceof(File).optional(),
+  contactNumber: z.string()
+    .min(10, "Contact number must be at least 10 characters")
+    .regex(/^[0-9+\-\s()]*$/, "Invalid phone number format"),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -62,20 +59,35 @@ export default function UserDetails({
       firstName: profile.firstName,
       lastName: profile.lastName,
       middleName: profile.middleName || "",
-      email: profile.email,
       contactNumber: profile.contactNumber,
-      bio: profile.bio || "",
-      profilePicture: profile.profilePicture ? new File([], "") : undefined,
     },
   });
+
+  // Reset form when editing state changes
+  useEffect(() => {
+    if (isEditing) {
+      form.reset({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        middleName: profile.middleName || "",
+        contactNumber: profile.contactNumber,
+      });
+    }
+  }, [isEditing, profile, form]);
 
   // Handle form submission
   const onSubmit = async (values: UserFormValues) => {
     if (!isCurrentUser) return;
-
     setIsSubmitting(true);
     try {
-      await UserAPI.updateProfile(profile.userID, values);
+      // Only send fields that have changed
+      const updateData: Record<string, string> = {};
+      if (values.firstName !== profile.firstName) updateData.firstName = values.firstName;
+      if (values.lastName !== profile.lastName) updateData.lastName = values.lastName;
+      if (values.middleName !== profile.middleName) updateData.middleName = values.middleName || null;
+      if (values.contactNumber !== profile.contactNumber) updateData.contactNumber = values.contactNumber;
+
+      await UserAPI.updateProfile(profile.userID, updateData);
       setProfile({ ...profile, ...values });
       toast({
         title: "Profile updated",
@@ -94,8 +106,7 @@ export default function UserDetails({
     }
   };
 
-  // Helper for profile picture
-  const profilePictureUrl = profile.profilePictureUrl || "/default-avatar.png";
+  const profilePictureUrl = "/default-avatar.png";
 
   return (
     <Card className="max-w-2xl mx-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl rounded-3xl p-8">
@@ -113,9 +124,6 @@ export default function UserDetails({
         <CardDescription className="text-primary-300 text-sm">
           {profile.role}
         </CardDescription>
-        {profile.bio && (
-          <p className="text-gray-300 text-center max-w-md mt-2">{profile.bio}</p>
-        )}
         {isCurrentUser && !isEditing && (
           <Button
             onClick={() => setIsEditing(true)}
@@ -145,7 +153,6 @@ export default function UserDetails({
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="lastName"
@@ -159,78 +166,53 @@ export default function UserDetails({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="middleName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Middle Name (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Middle Name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Contact Number" 
+                          {...field}
+                          onChange={(e) => {
+                            // Only allow numbers, +, -, spaces, and parentheses
+                            const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input value={profile.email} readOnly disabled />
+                  </FormControl>
+                </FormItem>
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input value={profile.role} readOnly disabled />
+                  </FormControl>
+                </FormItem>
               </div>
-
-              <FormField
-                control={form.control}
-                name="middleName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Middle Name (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Middle Name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Email" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="contactNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Contact Number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bio</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Write a short bio..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="profilePicture"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Profile Picture</FormLabel>
-                    <FormControl>
-                      <Input type="file" accept="image/*" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"

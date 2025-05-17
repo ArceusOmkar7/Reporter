@@ -1782,6 +1782,18 @@
       },
       "ProfileUpdateRequest": {
         "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "User's username"
+          },
           "firstName": {
             "anyOf": [
               {
