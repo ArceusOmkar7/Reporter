@@ -1,51 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ReportCard } from "@/components/ReportCard";
 import { Header } from "@/components/Header";
 import { useToast } from "@/hooks/use-toast";
-
-const initialReportsData = [
-  {
-    id: 1,
-    title: "Fix the potholes on Main Street",
-    description:
-      "The potholes on Main Street have been causing damage to vehicles and are a safety hazard.",
-    location: "Main Street, Downtown",
-    category: "Infrastructure",
-    date: "2023-05-15",
-    votes: 124,
-  },
-  {
-    id: 2,
-    title: "More street lights in Central Park",
-    description:
-      "The park is too dark at night, making it unsafe for pedestrians.",
-    location: "Central Park",
-    category: "Safety",
-    date: "2023-05-10",
-    votes: 89,
-  },
-  {
-    id: 3,
-    title: "Community garden in East Side",
-    description:
-      "We need a community garden to promote sustainable living and community bonding.",
-    location: "East Side Community Center",
-    category: "Infrastructure",
-    date: "2023-05-05",
-    votes: 56,
-  },
-];
+import { ReportAPI } from "@/lib/api-service";
+import { API_BASE_URL } from "@/lib/api-config";
+import type { ReportListItem } from "@/lib/api-types";
 
 const Index = () => {
-  const [reportsData, setReportsData] = useState(initialReportsData);
+  const [reports, setReports] = useState<ReportListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Fetch random reports on component mount
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        setIsLoading(true);
+        const data = await ReportAPI.search();
+        // Get random subset of reports (up to 3)
+        const randomReports = data.sort(() => 0.5 - Math.random()).slice(0, 3);
+        setReports(randomReports);
+      } catch (error) {
+        console.error("Failed to fetch reports:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load reports. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, [toast]);
+
   const handleVote = (id: number) => {
-    setReportsData((prevData) =>
+    setReports((prevData) =>
       prevData.map((report) =>
-        report.id === id ? { ...report, votes: report.votes + 1 } : report
+        report.reportID === id
+          ? { ...report, upvotes: (report.upvotes || 0) + 1 }
+          : report
       )
     );
     toast({
@@ -58,6 +55,21 @@ const Index = () => {
     // Navigate to browse page with pre-filtered category
     window.location.href = `/browse?category=${category}`;
   };
+
+  // Helper function to format report data for ReportCard
+  const formatReportForCard = (report: ReportListItem) => ({
+    id: report.reportID,
+    title: report.title,
+    description: report.description,
+    location: `${report.street || ""}, ${report.city || ""}`,
+    category: report.categoryName || "Uncategorized",
+    date: new Date(report.createdAt).toLocaleDateString(),
+    votes: report.upvotes || 0,
+    image:
+      report.imageCount && report.imageCount > 0
+        ? `${API_BASE_URL}/api/image/${report.reportID}`
+        : "/placeholder-report.svg",
+  });
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -98,16 +110,41 @@ const Index = () => {
                 View All
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {reportsData.map((report) => (
-                <ReportCard
-                  key={report.id}
-                  {...report}
-                  onVote={handleVote}
-                  onShowOnly={handleShowOnly}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-800/50 animate-pulse rounded-md h-80"
+                  ></div>
+                ))}
+              </div>
+            ) : reports.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {reports.map((report) => (
+                  <Link
+                    key={report.reportID}
+                    to={`/reports/${report.reportID}`}
+                    className="block"
+                  >
+                    <ReportCard
+                      {...formatReportForCard(report)}
+                      onVote={handleVote}
+                      onShowOnly={handleShowOnly}
+                    />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-12">
+                <p>No reports found. Be the first to create a report!</p>
+                <Link to="/new" className="mt-4 inline-block">
+                  <Button className="bg-white text-black hover:bg-gray-100 mt-4">
+                    Create Report
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
