@@ -137,7 +137,7 @@ The backend API documentation is available at:
    - Voting system
    - API documentation
 
-2. **Frontend**
+2. **Frontend (User Side - Completed)**
    - User authentication
    - Report creation and editing
    - Image upload
@@ -145,25 +145,17 @@ The backend API documentation is available at:
    - Report browsing
    - User profiles
    - Responsive design
+   - Voting functionality
 
-### Pending Features
+### In Progress
 
-1. **Backend**
-   - JWT authentication
-   - Password hashing
-   - Rate limiting
-   - CORS policies
-   - Input sanitization
-   - Comprehensive testing
-
-2. **Frontend**
-   - Loading skeletons
-   - Infinite scrolling
-   - Report search
-   - Advanced filtering
-   - Comments system
-   - Notifications
-   - Performance optimization
+1. **Frontend (Admin Dashboard)**
+   - Admin user management
+   - Report monitoring and moderation
+   - Category management
+   - Dashboard analytics
+   - System-wide statistics
+   - User activity tracking
 
 ## Contributing
 

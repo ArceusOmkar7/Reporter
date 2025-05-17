@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Shield } from "lucide-react";
 
 /**
  * Header component with responsive navigation
@@ -74,6 +74,20 @@ export const Header = () => {
                     Profile
                   </DropdownMenuItem>
                 </Link>
+
+                {/* Admin Dashboard link - only show for administrators */}
+                {user?.role === "Administrator" && (
+                  <>
+                    <DropdownMenuSeparator className="bg-gray-800" />
+                    <Link to="/admin/dashboard">
+                      <DropdownMenuItem className="cursor-pointer hover:bg-gray-800 flex items-center gap-2 text-purple-400">
+                        <Shield size={16} />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    </Link>
+                  </>
+                )}
+
                 <DropdownMenuSeparator className="bg-gray-800" />
                 {/* Logout button */}
                 <DropdownMenuItem

@@ -137,16 +137,24 @@ export const AuthAPI = {
 /**
  * User API Service
  *
- * Provides methods for user profile operations:
- * - Get all users
- * - Get a user profile by ID
- * - Update a user profile
+ * Provides methods for user operations:
+ * - Get user profiles
+ * - Update user profiles
  */
 export const UserAPI = {
   /**
    * Get all users
    *
-   * @returns {Promise<UserProfileResponse[]>} List of user profiles
+   * @returns {Promise<UserProfileResponse[]>} Array of user profiles
+   */
+  getAllUsers: async (): Promise<UserProfileResponse[]> => {
+    return apiRequest<UserProfileResponse[]>(API_ENDPOINTS.USER.ALL);
+  },
+
+  /**
+   * Get all users (same as getAllUsers but with legacy name)
+   *
+   * @returns {Promise<UserProfileResponse[]>} Array of user profiles
    */
   getAll: async (): Promise<UserProfileResponse[]> => {
     return apiRequest<UserProfileResponse[]>(API_ENDPOINTS.USER.ALL);
@@ -155,7 +163,7 @@ export const UserAPI = {
   /**
    * Get user profile by ID
    *
-   * @param {number} userId - User ID to retrieve
+   * @param {number} userId - User ID to fetch profile for
    * @returns {Promise<UserProfileResponse>} User profile data
    */
   getProfile: async (userId: number): Promise<UserProfileResponse> => {
@@ -165,8 +173,8 @@ export const UserAPI = {
   /**
    * Update user profile
    *
-   * @param {number} userId - User ID to update
-   * @param {Partial<UserProfileResponse>} profileData - Profile data to update
+   * @param {number} userId - ID of user to update
+   * @param {Partial<UserProfileResponse>} profileData - Updated profile data
    * @returns {Promise<BaseResponse>} Confirmation message
    */
   updateProfile: async (

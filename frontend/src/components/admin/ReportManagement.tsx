@@ -1,0 +1,148 @@
+/**
+ * ReportManagement Component
+ *
+ * Admin component for managing system reports:
+ * - View all reports
+ * - Manage reports
+ */
+import { useState, useEffect } from "react";
+import { ReportAPI } from "@/lib/api-service";
+import { ReportListItem } from "@/lib/api-types";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { Loader2, MoreHorizontal, FileText, Trash2, Edit } from "lucide-react";
+
+export function ReportManagement() {
+  const [reports, setReports] = useState<ReportListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        setLoading(true);
+        const allReports = await ReportAPI.search();
+        setReports(allReports);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+        toast.error("Failed to load reports");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
+
+  const handleDeleteReport = async (reportId: number) => {
+    try {
+      // This would be an API call in a real system
+      // await ReportAPI.delete(reportId);
+
+      // For now, just update the local state
+      setReports(reports.filter((report) => report.reportID !== reportId));
+      toast.success("Report deleted successfully");
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast.error("Failed to delete report");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+        <span>Loading reports...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Reports ({reports.length})</h2>
+      </div>
+
+      <div className="border rounded-md overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reports.map((report) => (
+              <TableRow key={report.reportID}>
+                <TableCell>{report.reportID}</TableCell>
+                <TableCell>{report.title}</TableCell>
+                <TableCell>{report.categoryName || "N/A"}</TableCell>
+                <TableCell>
+                  {report.city && report.state
+                    ? `${report.city}, ${report.state}`
+                    : "N/A"}
+                </TableCell>
+                <TableCell>{report.username || "Unknown"}</TableCell>
+                <TableCell>
+                  {new Date(report.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <Link to={`/reports/${report.reportID}`}>
+                        <DropdownMenuItem className="cursor-pointer">
+                          <FileText className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link to={`/edit/${report.reportID}`}>
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Report
+                        </DropdownMenuItem>
+                      </Link>
+                      <DropdownMenuItem
+                        className="cursor-pointer text-red-600"
+                        onClick={() => handleDeleteReport(report.reportID)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Report
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}

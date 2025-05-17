@@ -22,7 +22,7 @@ interface AuthContextType {
   user: UserInfo | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<UserInfo>;
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => void;
 }
@@ -61,14 +61,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Log in a user with credentials
    *
    * @param {LoginRequest} credentials - User login credentials (username & password)
+   * @returns {Promise<UserInfo>} The logged in user data
    */
-  const login = async (credentials: LoginRequest) => {
+  const login = async (credentials: LoginRequest): Promise<UserInfo> => {
     setIsLoading(true);
     try {
       const response = await AuthAPI.login(credentials);
       setUser(response.user);
       // Store user data in local storage for persistence
       localStorage.setItem("user", JSON.stringify(response.user));
+      return response.user; // Return the user data for immediate use
     } finally {
       setIsLoading(false);
     }

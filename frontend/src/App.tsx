@@ -22,6 +22,7 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/ReportCard";
 import UserProfile from "./pages/UserProfile";
+import AdminDashboard from "./pages/admin/Dashboard";
 
 // Initialize React Query client for data fetching
 const queryClient = new QueryClient();
@@ -62,6 +63,9 @@ const App = () => (
 
               {/* Profile route */}
               <Route path="/profile/:userId" element={<UserProfile />} />
+
+              {/* Admin routes */}
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
               {/* Fallback for unmatched routes */}
               <Route path="*" element={<NotFound />} />
