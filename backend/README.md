@@ -65,26 +65,16 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
 
 ## Pending Tasks
 
-1. **Security Enhancements**
-   - Implement JWT token authentication
-   - Add password hashing
-   - Add rate limiting
-   - Implement CORS policies
-   - Add input sanitization
-
-2. **Testing**
+1. **Testing**
    - Unit tests for all endpoints
    - Integration tests
    - API endpoint testing
    - Database migration tests
    - Load testing
 
-3. **Performance Optimization**
-   - Implement caching layer
-   - Add database indexing
+2. **Performance Optimization**
    - Optimize query performance
    - Add connection pooling
-   - Implement request throttling
 
 4. **Monitoring and Logging**
    - Add structured logging

@@ -1,3 +1,10 @@
+/**
+ * API Service Module
+ *
+ * This module provides a structured interface for interacting with the Reporter backend API.
+ * It includes services for authentication, user management, reports, categories, locations,
+ * votes, and image uploads.
+ */
 import { API_BASE_URL, API_ENDPOINTS } from "./api-config";
 import type {
   LoginRequest,
@@ -19,7 +26,16 @@ import type {
   ImageResponse,
 } from "./api-types";
 
-// Helper function to handle API errors
+/**
+ * Helper function to handle API errors
+ *
+ * Processes HTTP error responses, attempts to parse JSON error data,
+ * and throws an appropriate error message.
+ *
+ * @param {Response} response - The fetch API response object
+ * @returns {Response} The original response if no error
+ * @throws {Error} With error message from API or status code
+ */
 const handleApiError = async (response: Response) => {
   if (!response.ok) {
     console.error("API Error Response:", response.status, response.statusText);
@@ -38,7 +54,18 @@ const handleApiError = async (response: Response) => {
   return response;
 };
 
-// General API request function with error handling
+/**
+ * General API request function with error handling
+ *
+ * Makes HTTP requests to the API with appropriate headers and error handling.
+ * Logs requests and responses for debugging purposes.
+ *
+ * @template T - The expected response data type
+ * @param {string} endpoint - API endpoint path
+ * @param {RequestInit} [options] - Fetch API options
+ * @returns {Promise<T>} Response data of expected type
+ * @throws {Error} If the request fails
+ */
 const apiRequest = async <T>(
   endpoint: string,
   options?: RequestInit
@@ -46,6 +73,7 @@ const apiRequest = async <T>(
   const url = `${API_BASE_URL}${endpoint}`;
   console.log(`Making API request to ${url}`);
 
+  // Set default headers and merge with provided options
   const headers = {
     "Content-Type": "application/json",
     ...(options?.headers || {}),
@@ -71,9 +99,20 @@ const apiRequest = async <T>(
   }
 };
 
-// Authentication API service
+/**
+ * Authentication API Service
+ *
+ * Provides methods for user authentication operations:
+ * - Login: Authenticate a user with credentials
+ * - Register: Create a new user account
+ */
 export const AuthAPI = {
-  // Login user
+  /**
+   * Login user with credentials
+   *
+   * @param {LoginRequest} credentials - Username and password
+   * @returns {Promise<LoginResponse>} User data and authentication token
+   */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     return apiRequest<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, {
       method: "POST",
@@ -81,7 +120,12 @@ export const AuthAPI = {
     });
   },
 
-  // Register new user
+  /**
+   * Register a new user
+   *
+   * @param {RegisterRequest} userData - New user registration data
+   * @returns {Promise<RegisterResponse>} Confirmation with new user ID
+   */
   register: async (userData: RegisterRequest): Promise<RegisterResponse> => {
     return apiRequest<RegisterResponse>(API_ENDPOINTS.AUTH.REGISTER, {
       method: "POST",
@@ -90,19 +134,41 @@ export const AuthAPI = {
   },
 };
 
-// User API service
+/**
+ * User API Service
+ *
+ * Provides methods for user profile operations:
+ * - Get all users
+ * - Get a user profile by ID
+ * - Update a user profile
+ */
 export const UserAPI = {
-  // Get all users
+  /**
+   * Get all users
+   *
+   * @returns {Promise<UserProfileResponse[]>} List of user profiles
+   */
   getAll: async (): Promise<UserProfileResponse[]> => {
     return apiRequest<UserProfileResponse[]>(API_ENDPOINTS.USER.ALL);
   },
 
-  // Get user profile by ID
+  /**
+   * Get user profile by ID
+   *
+   * @param {number} userId - User ID to retrieve
+   * @returns {Promise<UserProfileResponse>} User profile data
+   */
   getProfile: async (userId: number): Promise<UserProfileResponse> => {
     return apiRequest<UserProfileResponse>(API_ENDPOINTS.USER.PROFILE(userId));
   },
 
-  // Update user profile
+  /**
+   * Update user profile
+   *
+   * @param {number} userId - User ID to update
+   * @param {Partial<UserProfileResponse>} profileData - Profile data to update
+   * @returns {Promise<BaseResponse>} Confirmation message
+   */
   updateProfile: async (
     userId: number,
     profileData: Partial<UserProfileResponse>

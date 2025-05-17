@@ -1,3 +1,10 @@
+"""
+Authentication Routes Module
+
+This module defines the authentication endpoints for user registration and login.
+It handles user creation, credential validation, and returning user information.
+"""
+
 from fastapi import APIRouter, HTTPException, Request, Body, status, Form
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
@@ -10,6 +17,12 @@ router = APIRouter()
 
 
 class RegisterRequest(BaseModel):
+    """
+    Registration request data model
+
+    Contains all required fields for user registration.
+    Includes validation for email and phone number formats.
+    """
     username: str = Field(..., description="User's unique username")
     password: str = Field(..., min_length=6,
                           description="User's password (min 6 characters)")
@@ -22,27 +35,44 @@ class RegisterRequest(BaseModel):
 
     @validator('email')
     def email_must_be_valid(cls, v):
+        """Validate email format using regex pattern"""
         if not validate_email(v):
             raise ValueError("Invalid email format")
         return v
 
     @validator('contactNumber')
     def phone_must_be_valid(cls, v):
+        """Validate phone number format using regex pattern"""
         if not validate_phone(v):
             raise ValueError("Invalid phone number format")
         return v
 
 
 class RegisterResponse(BaseResponse):
+    """
+    Response model for successful registration
+
+    Extends BaseResponse to include the newly created user ID.
+    """
     id: int = Field(..., description="ID of the newly registered user")
 
 
 class LoginRequest(BaseModel):
+    """
+    Login request data model
+
+    Contains required fields for user authentication.
+    """
     username: str = Field(..., description="User's username")
     password: str = Field(..., description="User's password")
 
 
 class LoginResponse(BaseModel):
+    """
+    Response model for successful login
+
+    Contains a success message and user information.
+    """
     message: str
     user: UserInfo
 
@@ -52,7 +82,17 @@ async def register(data: RegisterRequest):
     """
     Register a new user
 
-    Creates a new user account with the provided details and returns the user ID
+    Creates a new user account with the provided details and returns the user ID.
+    Checks for existing usernames or emails to prevent duplicates.
+
+    Args:
+        data: The registration request data
+
+    Returns:
+        RegisterResponse: Success message and user ID
+
+    Raises:
+        HTTPException: If registration fails or username/email already exists
     """
     try:
         conn = get_db_connection()
@@ -68,6 +108,7 @@ async def register(data: RegisterRequest):
                 status_code=400, detail="Username or email already exists")
 
         # Store password as plain text
+        # TODO: Implement password hashing for security
         plain_password = data.password
 
         # Insert user with plain text password
@@ -100,7 +141,17 @@ async def login(data: LoginRequest):
     """
     Authenticate user with username and password
 
-    Validates user credentials and returns user information
+    Validates user credentials and returns user information upon successful login.
+    Handles different database column name formats to ensure compatibility.
+
+    Args:
+        data: The login request data with username and password
+
+    Returns:
+        LoginResponse: Success message and user information
+
+    Raises:
+        HTTPException: If authentication fails
     """
     try:
         conn = get_db_connection()
@@ -131,6 +182,7 @@ async def login(data: LoginRequest):
                 status_code=401, detail="Invalid username or password")
 
         # Safely compare passwords
+        # TODO: Implement secure password verification
         try:
             if not verify_password(data.password, password):
                 raise HTTPException(

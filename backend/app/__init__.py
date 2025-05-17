@@ -1,3 +1,10 @@
+"""
+Reporter API: FastAPI application factory module
+
+This module contains the application factory that creates and configures the FastAPI application.
+It sets up middleware, route handlers, exception handlers, and static file serving.
+"""
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,6 +15,15 @@ from datetime import datetime
 
 
 def create_app():
+    """
+    FastAPI application factory
+
+    Creates and configures a FastAPI application instance with all necessary middleware,
+    routes, and exception handlers.
+
+    Returns:
+        FastAPI: Configured FastAPI application instance
+    """
     app = FastAPI(
         title="Reporter API",
         description="API for Reporter application - Public API with no authentication requirements",
@@ -29,10 +45,12 @@ def create_app():
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     # Mount static file server for uploads
+    # This makes uploaded files accessible via HTTP at /backend/uploads/filename
     app.mount("/backend/uploads",
               StaticFiles(directory=Config.UPLOAD_FOLDER), name="uploads")
 
     # Enable CORS for API routes
+    # This allows frontend applications running on localhost:8080 to make requests to this API
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:8080"],
@@ -57,7 +75,7 @@ def create_app():
             "documentation": "/docs"
         }
 
-    # Register routers
+    # Register routers from each module
     from .routes.auth import router as auth_router
     from .routes.user import router as user_router
     from .routes.report import router as report_router
@@ -66,6 +84,7 @@ def create_app():
     from .routes.image import router as image_router
     from .routes.vote import router as vote_router
 
+    # Include each router with appropriate prefix and tags for OpenAPI documentation
     app.include_router(auth_router, prefix="/api/auth",
                        tags=["Authentication"])
     app.include_router(user_router, prefix="/api/user", tags=["Users"])
@@ -80,6 +99,16 @@ def create_app():
     # Exception handlers
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        """
+        Handle specific HTTP exceptions and return standardized JSON responses
+
+        Args:
+            request: The incoming request
+            exc: The HTTP exception that was raised
+
+        Returns:
+            JSONResponse with appropriate status code and error detail
+        """
         return JSONResponse(
             status_code=exc.status_code,
             content={"error": exc.detail}
@@ -87,6 +116,16 @@ def create_app():
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
+        """
+        Handle any unhandled exceptions and return a 500 Internal Server Error
+
+        Args:
+            request: The incoming request
+            exc: The exception that was raised
+
+        Returns:
+            JSONResponse with 500 status code and error detail
+        """
         return JSONResponse(
             status_code=500,
             content={"error": str(exc)}

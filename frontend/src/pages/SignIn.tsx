@@ -1,3 +1,14 @@
+/**
+ * Sign In Page
+ *
+ * This page allows users to authenticate with their credentials.
+ * Features:
+ * - Username and password form
+ * - Form validation
+ * - Error handling with toast notifications
+ * - Navigation after successful login
+ * - Link to sign up page for new users
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,34 +18,56 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+/**
+ * SignIn component handles user authentication
+ *
+ * @returns {JSX.Element} The sign in page component
+ */
 const SignIn = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Form state for username and password
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+  // Loading state for submission feedback
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Update form data when input fields change
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Handle form submission for sign in
+   * Attempts to authenticate the user and navigates on success
+   *
+   * @param {React.FormEvent} e - Form submit event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Authenticate user with the auth context
       await login({
         username: formData.username,
         password: formData.password,
       });
 
+      // Show success notification and redirect to home page
       toast.success("Signed in successfully!");
       navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
+      // Show error notification with specific error message if available
       toast.error(
         error instanceof Error
           ? error.message
@@ -47,13 +80,17 @@ const SignIn = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Global header navigation */}
       <Header />
+
+      {/* Main content area */}
       <main className="flex-1 container max-w-md mx-auto px-4 py-10 flex items-center justify-center">
         <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-8 w-full">
           <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
 
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
+              {/* Username field */}
               <div>
                 <label htmlFor="username" className="block text-sm mb-1">
                   Username
@@ -68,6 +105,7 @@ const SignIn = () => {
                     required
                     className="bg-black border-gray-700 pr-10"
                   />
+                  {/* Show checkmark when username is entered */}
                   {formData.username && (
                     <Check
                       size={16}
@@ -77,6 +115,7 @@ const SignIn = () => {
                 </div>
               </div>
 
+              {/* Password field with forgot password link */}
               <div>
                 <div className="flex justify-between items-baseline mb-1">
                   <label htmlFor="password" className="block text-sm">
@@ -101,6 +140,7 @@ const SignIn = () => {
                 />
               </div>
 
+              {/* Submit button with loading state */}
               <Button
                 type="submit"
                 className="w-full mt-4 bg-white text-black hover:bg-gray-200"
@@ -109,6 +149,7 @@ const SignIn = () => {
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
 
+              {/* Link to sign up page */}
               <div className="text-center text-sm text-gray-400 mt-4">
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-white underline">
