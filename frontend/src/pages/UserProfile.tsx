@@ -8,6 +8,8 @@ import UserDetails from "@/components/profile/UserDetails";
 import UserReports from "@/components/profile/UserReports";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { Header } from "@/components/Header";
+import { toast } from "sonner";
 
 export default function UserProfile() {
   const { userId } = useParams();
@@ -52,88 +54,113 @@ export default function UserProfile() {
     fetchUserData();
   }, [userId]);
 
-  // Redirect to login if trying to access profile when not logged in
+  // Redirect to login if not authenticated or trying to access another user's profile
   useEffect(() => {
     if (!user && !loading) {
+      toast.error("Please sign in to view profiles");
       navigate("/signin", { replace: true });
+      return;
     }
-  }, [user, loading, navigate]);
+
+    // Only allow users to view their own profile unless they have admin role
+    if (
+      user &&
+      Number(userId) !== user.id &&
+      user.role !== "admin" &&
+      !loading
+    ) {
+      toast.error("You can only view your own profile");
+      navigate(`/profile/${user.id}`, { replace: true });
+    }
+  }, [user, userId, loading, navigate]);
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading profile...</span>
-      </div>
+      <>
+        <Header />
+        <div className="flex h-[70vh] items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading profile...</span>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-            <button
-              onClick={() => navigate(-1)}
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
-            >
-              Go Back
-            </button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-500">Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{error}</p>
+              <button
+                onClick={() => navigate(-1)}
+                className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+              >
+                Go Back
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   if (!profile) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>User not found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>The requested user profile could not be found.</p>
-            <button
-              onClick={() => navigate(-1)}
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
-            >
-              Go Back
-            </button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>User not found</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>The requested user profile could not be found.</p>
+              <button
+                onClick={() => navigate(-1)}
+                className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+              >
+                Go Back
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">
-        {isCurrentUser ? "Your Profile" : `${profile.firstName}'s Profile`}
-      </h1>
+    <>
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">
+          {isCurrentUser ? "Your Profile" : `${profile.firstName}'s Profile`}
+        </h1>
 
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="details">Profile Details</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="details">Profile Details</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="details">
-          <UserDetails
-            profile={profile}
-            setProfile={setProfile}
-            isCurrentUser={isCurrentUser}
-          />
-        </TabsContent>
+          <TabsContent value="details">
+            <UserDetails
+              profile={profile}
+              setProfile={setProfile}
+              isCurrentUser={isCurrentUser}
+            />
+          </TabsContent>
 
-        <TabsContent value="reports">
-          <UserReports reports={reports} isCurrentUser={isCurrentUser} />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="reports">
+            <UserReports reports={reports} isCurrentUser={isCurrentUser} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }
