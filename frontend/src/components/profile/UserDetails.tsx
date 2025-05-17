@@ -22,7 +22,15 @@ import * as z from "zod";
 import { UserProfileResponse } from "../../lib/api-types";
 import { UserAPI } from "../../lib/api-service";
 import { useToast } from "../ui/use-toast";
-import { Loader2, Save, Mail, Phone, User as UserIcon, Trash2 } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  Mail,
+  Phone,
+  User as UserIcon,
+  Trash2,
+} from "lucide-react";
+import { UserAvatar } from "../UserAvatar";
 
 // Interface for component props
 interface UserDetailsProps {
@@ -77,9 +85,12 @@ export default function UserDetails({
     try {
       // Only send fields that have changed
       const updateData: Record<string, string> = {};
-      if (values.firstName !== profile.firstName) updateData.firstName = values.firstName;
-      if (values.lastName !== profile.lastName) updateData.lastName = values.lastName;
-      if (values.middleName !== profile.middleName) updateData.middleName = values.middleName || null;
+      if (values.firstName !== profile.firstName)
+        updateData.firstName = values.firstName;
+      if (values.lastName !== profile.lastName)
+        updateData.lastName = values.lastName;
+      if (values.middleName !== profile.middleName)
+        updateData.middleName = values.middleName || null;
 
       await UserAPI.updateProfile(profile.userID, updateData);
       setProfile({ ...profile, ...values });
@@ -100,20 +111,21 @@ export default function UserDetails({
     }
   };
 
-  const profilePictureUrl = "/default-avatar.png";
-
   return (
     <Card className="max-w-2xl mx-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl rounded-3xl p-8">
       <CardHeader className="flex flex-col items-center gap-4 pb-0">
         <div className="relative">
-          <img
-            src={profilePictureUrl}
-            alt="Profile"
-            className="w-32 h-32 rounded-full border-4 border-primary object-cover shadow-lg bg-gray-700"
+          <UserAvatar
+            firstName={profile.firstName}
+            lastName={profile.lastName}
+            size="xl"
+            className="shadow-lg"
           />
         </div>
         <CardTitle className="text-2xl font-bold text-white mt-2">
-          {profile.firstName} {profile.middleName ? profile.middleName + ' ' : ''}{profile.lastName}
+          {profile.firstName}{" "}
+          {profile.middleName ? profile.middleName + " " : ""}
+          {profile.lastName}
         </CardTitle>
         <CardDescription className="text-primary-300 text-sm">
           {profile.role}
@@ -233,23 +245,31 @@ export default function UserDetails({
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
                 <span className="text-gray-400">Contact:</span>
-                <span className="text-lg text-white">{profile.contactNumber}</span>
+                <span className="text-lg text-white">
+                  {profile.contactNumber}
+                </span>
               </div>
             </div>
             <div className="space-y-4">
               <div>
                 <span className="text-gray-400">First Name:</span>
-                <span className="text-lg text-white ml-2">{profile.firstName}</span>
+                <span className="text-lg text-white ml-2">
+                  {profile.firstName}
+                </span>
               </div>
               {profile.middleName && (
                 <div>
                   <span className="text-gray-400">Middle Name:</span>
-                  <span className="text-lg text-white ml-2">{profile.middleName}</span>
+                  <span className="text-lg text-white ml-2">
+                    {profile.middleName}
+                  </span>
                 </div>
               )}
               <div>
                 <span className="text-gray-400">Last Name:</span>
-                <span className="text-lg text-white ml-2">{profile.lastName}</span>
+                <span className="text-lg text-white ml-2">
+                  {profile.lastName}
+                </span>
               </div>
             </div>
           </div>

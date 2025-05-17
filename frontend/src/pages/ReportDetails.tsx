@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ReportAPI, VoteAPI } from "@/lib/api-service";
+import { ReportAPI, VoteAPI, UserAPI } from "@/lib/api-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { UserAvatar } from "@/components/UserAvatar";
 import {
   ThumbsUp,
   ThumbsDown,
@@ -31,6 +32,10 @@ const ReportDetails = () => {
   const { user, isAuthenticated } = useAuth();
 
   const [userVote, setUserVote] = useState<string | null>(null);
+  const [reportAuthor, setReportAuthor] = useState<{
+    firstName: string;
+    lastName: string;
+  } | null>(null);
 
   // Fetch report details
   const {
@@ -60,6 +65,21 @@ const ReportDetails = () => {
       checkUserVote();
     }
   }, [report, user?.id, reportId]);
+
+  // Fetch report author details
+  useEffect(() => {
+    if (report && report.userID) {
+      const fetchAuthor = async () => {
+        try {
+          const authorData = await UserAPI.getProfile(report.userID);
+          setReportAuthor(authorData);
+        } catch (error) {
+          console.error("Error fetching author details:", error);
+        }
+      };
+      fetchAuthor();
+    }
+  }, [report]);
 
   // Mutation for voting
   const voteMutation = useMutation({
@@ -140,7 +160,7 @@ const ReportDetails = () => {
           onSuccess: () => {
             setUserVote(null);
             toast.success("Your vote has been removed");
-          }
+          },
         }
       );
       return;
@@ -266,8 +286,16 @@ const ReportDetails = () => {
                   <span>{formattedDate}</span>
                 </div>
                 {report.username && (
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
-                    <User size={16} />
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    {reportAuthor ? (
+                      <UserAvatar
+                        firstName={reportAuthor.firstName}
+                        lastName={reportAuthor.lastName}
+                        size="sm"
+                      />
+                    ) : (
+                      <User size={16} />
+                    )}
                     <span>Posted by {report.username}</span>
                   </div>
                 )}

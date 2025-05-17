@@ -119,7 +119,7 @@ export default function UserReports({
                 key={report.reportID}
                 className="overflow-hidden hover:shadow-md transition-shadow"
               >
-                <Link to={`/petition/${report.reportID}`} className="block">
+                <Link to={`/reports/${report.reportID}`} className="block">
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold line-clamp-2">
