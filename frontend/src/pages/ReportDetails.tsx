@@ -54,7 +54,7 @@ const ReportDetails = () => {
       // Check if user has already voted
       const checkUserVote = async () => {
         try {
-          const response = await VoteAPI.getVoteCounts(reportId);
+          const response = await VoteAPI.getVoteCounts(reportId, user?.id);
           if (response.userVote) {
             setUserVote(response.userVote);
           }
@@ -149,7 +149,7 @@ const ReportDetails = () => {
     // If user has already voted with the same type, remove the vote
     if (previousVote === type) {
       voteMutation.mutate(
-        { type: "upvote", userId: user?.id },
+        { type, userId: user?.id },
         {
           onError: () => {
             // Revert on error
@@ -160,6 +160,23 @@ const ReportDetails = () => {
           onSuccess: () => {
             setUserVote(null);
             toast.success("Your vote has been removed");
+
+            // Update the report in cache after successful removal
+            if (report) {
+              const updatedReport = { ...report };
+              if (type === "upvote") {
+                updatedReport.upvotes = Math.max(
+                  0,
+                  (updatedReport.upvotes || 0) - 1
+                );
+              } else {
+                updatedReport.downvotes = Math.max(
+                  0,
+                  (updatedReport.downvotes || 0) - 1
+                );
+              }
+              queryClient.setQueryData(["report", reportId], updatedReport);
+            }
           },
         }
       );
@@ -353,13 +370,16 @@ const ReportDetails = () => {
                   size="lg"
                   className={`flex-1 flex items-center justify-center gap-2 ${
                     userVote === "upvote"
-                      ? "bg-green-900/20 text-green-400 border-green-800"
+                      ? "bg-green-900/40 text-green-400 border-green-600 hover:bg-green-900/60"
                       : "bg-transparent border-gray-700"
                   }`}
                   onClick={() => handleVote("upvote")}
                   disabled={voteMutation.isPending}
                 >
-                  <ThumbsUp size={18} />
+                  <ThumbsUp
+                    size={18}
+                    className={userVote === "upvote" ? "fill-green-400" : ""}
+                  />
                   <span>{report.upvotes || 0}</span>
                 </Button>
 
@@ -368,13 +388,16 @@ const ReportDetails = () => {
                   size="lg"
                   className={`flex-1 flex items-center justify-center gap-2 ${
                     userVote === "downvote"
-                      ? "bg-red-900/20 text-red-400 border-red-800"
+                      ? "bg-red-900/40 text-red-400 border-red-600 hover:bg-red-900/60"
                       : "bg-transparent border-gray-700"
                   }`}
                   onClick={() => handleVote("downvote")}
                   disabled={voteMutation.isPending}
                 >
-                  <ThumbsDown size={18} />
+                  <ThumbsDown
+                    size={18}
+                    className={userVote === "downvote" ? "fill-red-400" : ""}
+                  />
                   <span>{report.downvotes || 0}</span>
                 </Button>
               </div>

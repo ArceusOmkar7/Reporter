@@ -382,8 +382,14 @@ export const ImageAPI = {
 // Vote API service
 export const VoteAPI = {
   // Get vote counts for a report
-  getVoteCounts: async (reportId: number): Promise<VoteCounts> => {
-    return apiRequest<VoteCounts>(API_ENDPOINTS.VOTE.GET(reportId));
+  getVoteCounts: async (
+    reportId: number,
+    userId?: number
+  ): Promise<VoteCounts> => {
+    const queryString = userId ? `?user_id=${userId}` : "";
+    return apiRequest<VoteCounts>(
+      `${API_ENDPOINTS.VOTE.GET(reportId)}${queryString}`
+    );
   },
 
   // Vote on a report

@@ -35,7 +35,10 @@ const Index = () => {
           const votes: Record<number, "upvote" | "downvote" | null> = {};
           for (const report of randomReports) {
             try {
-              const response = await VoteAPI.getVoteCounts(report.reportID);
+              const response = await VoteAPI.getVoteCounts(
+                report.reportID,
+                user?.id
+              );
               if (response.userVote) {
                 votes[report.reportID] = response.userVote;
               }
