@@ -22,7 +22,7 @@ import * as z from "zod";
 import { UserProfileResponse } from "../../lib/api-types";
 import { UserAPI } from "../../lib/api-service";
 import { useToast } from "../ui/use-toast";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Mail, Phone, User as UserIcon } from "lucide-react";
 
 // Interface for component props
 interface UserDetailsProps {
@@ -40,6 +40,8 @@ const userFormSchema = z.object({
   contactNumber: z
     .string()
     .min(10, "Contact number must be at least 10 characters"),
+  bio: z.string().max(200, "Bio must be less than 200 characters").optional(),
+  profilePicture: z.instanceof(File).optional(),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -62,6 +64,8 @@ export default function UserDetails({
       middleName: profile.middleName || "",
       email: profile.email,
       contactNumber: profile.contactNumber,
+      bio: profile.bio || "",
+      profilePicture: profile.profilePicture ? new File([], "") : undefined,
     },
   });
 
@@ -90,26 +94,38 @@ export default function UserDetails({
     }
   };
 
+  // Helper for profile picture
+  const profilePictureUrl = profile.profilePictureUrl || "/default-avatar.png";
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          Profile Information
-          {isCurrentUser && !isEditing && (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="outline"
-              size="sm"
-            >
-              Edit Profile
-            </Button>
-          )}
+    <Card className="max-w-2xl mx-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl rounded-3xl p-8">
+      <CardHeader className="flex flex-col items-center gap-4 pb-0">
+        <div className="relative">
+          <img
+            src={profilePictureUrl}
+            alt="Profile"
+            className="w-32 h-32 rounded-full border-4 border-primary object-cover shadow-lg bg-gray-700"
+          />
+        </div>
+        <CardTitle className="text-2xl font-bold text-white mt-2">
+          {profile.firstName} {profile.middleName ? profile.middleName + ' ' : ''}{profile.lastName}
         </CardTitle>
-        <CardDescription>
-          {isEditing
-            ? "Edit your personal information"
-            : "Your personal information"}
+        <CardDescription className="text-primary-300 text-sm">
+          {profile.role}
         </CardDescription>
+        {profile.bio && (
+          <p className="text-gray-300 text-center max-w-md mt-2">{profile.bio}</p>
+        )}
+        {isCurrentUser && !isEditing && (
+          <Button
+            onClick={() => setIsEditing(true)}
+            variant="default"
+            size="sm"
+            className="mt-2"
+          >
+            Edit Profile
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {isEditing ? (
@@ -187,6 +203,34 @@ export default function UserDetails({
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Write a short bio..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="profilePicture"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profile Picture</FormLabel>
+                    <FormControl>
+                      <Input type="file" accept="image/*" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
@@ -213,57 +257,39 @@ export default function UserDetails({
             </form>
           </Form>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Username
-                </h3>
-                <p className="text-lg">{profile.username}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <UserIcon className="w-4 h-4 text-primary" />
+                <span className="text-gray-400">Username:</span>
+                <span className="text-lg text-white">{profile.username}</span>
               </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Role
-                </h3>
-                <p className="text-lg capitalize">{profile.role}</p>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary" />
+                <span className="text-gray-400">Email:</span>
+                <span className="text-lg text-white">{profile.email}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-primary" />
+                <span className="text-gray-400">Contact:</span>
+                <span className="text-lg text-white">{profile.contactNumber}</span>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  First Name
-                </h3>
-                <p className="text-lg">{profile.firstName}</p>
+                <span className="text-gray-400">First Name:</span>
+                <span className="text-lg text-white ml-2">{profile.firstName}</span>
               </div>
               {profile.middleName && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Middle Name
-                  </h3>
-                  <p className="text-lg">{profile.middleName}</p>
+                  <span className="text-gray-400">Middle Name:</span>
+                  <span className="text-lg text-white ml-2">{profile.middleName}</span>
                 </div>
               )}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Last Name
-                </h3>
-                <p className="text-lg">{profile.lastName}</p>
+                <span className="text-gray-400">Last Name:</span>
+                <span className="text-lg text-white ml-2">{profile.lastName}</span>
               </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Email
-              </h3>
-              <p className="text-lg">{profile.email}</p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Contact Number
-              </h3>
-              <p className="text-lg">{profile.contactNumber}</p>
             </div>
           </div>
         )}

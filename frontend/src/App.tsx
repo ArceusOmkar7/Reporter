@@ -21,6 +21,7 @@ import EditReport from "./pages/EditReport";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/ReportCard";
+import UserProfile from "./pages/UserProfile";
 
 // Initialize React Query client for data fetching
 const queryClient = new QueryClient();
@@ -58,6 +59,9 @@ const App = () => (
               {/* Authentication routes */}
               <Route path="/signup" element={<SignUp />} />
               <Route path="/signin" element={<SignIn />} />
+
+              {/* Profile route */}
+              <Route path="/profile/:userId" element={<UserProfile />} />
 
               {/* Fallback for unmatched routes */}
               <Route path="*" element={<NotFound />} />
