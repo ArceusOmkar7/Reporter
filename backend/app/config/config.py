@@ -16,11 +16,7 @@ class Config:
     - Security settings (SECRET_KEY)
     - File upload configuration
     - Database connection parameters
-    - JWT authentication settings
     """
-    # Security
-    # Generate random secret key for this instance
-    SECRET_KEY = os.urandom(24).hex()
 
     # File uploads
     UPLOAD_FOLDER = 'uploads'  # Directory to store uploaded files
@@ -33,7 +29,3 @@ class Config:
     DB_USER = 'root'  # MySQL username
     DB_PASSWORD = '1234'  # MySQL password
     DB_NAME = 'reporter_lab'  # Database name
-
-    # JWT configuration (for future implementation)
-    JWT_SECRET_KEY = SECRET_KEY  # Use same secret for JWT
-    JWT_ACCESS_TOKEN_EXPIRES = 24 * 60 * 60  # 24 hours token expiration

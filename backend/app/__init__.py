@@ -12,6 +12,18 @@ from fastapi.staticfiles import StaticFiles
 from .config.config import Config
 import os
 from datetime import datetime
+from .utils.database import init_database
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize database before application starts
+    print("FastAPI startup: Initializing database...")
+    init_database()
+    yield
+    # Shutdown: Code to run when application is shutting down
+    print("FastAPI shutdown: Cleaning up resources...")
 
 
 def create_app():
@@ -28,6 +40,7 @@ def create_app():
         title="Reporter API",
         description="API for Reporter application - Public API with no authentication requirements",
         version="1.0.0",
+        lifespan=lifespan,
         openapi_tags=[
             {"name": "Authentication",
                 "description": "Simple username/password login (no JWT tokens)"},

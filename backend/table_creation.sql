@@ -1,4 +1,4 @@
-USE reporter_py;
+USE reporter_lab;
 
 START TRANSACTION;
 
