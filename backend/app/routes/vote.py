@@ -10,7 +10,8 @@ router = APIRouter()
 
 
 class VoteCreate(BaseModel):
-    voteType: Literal['upvote', 'downvote'] = Field(..., description="Type of vote (upvote or downvote)")
+    voteType: Literal['upvote', 'downvote'] = Field(
+        ..., description="Type of vote (upvote or downvote)")
 
 
 class VoteCounts(BaseModel):

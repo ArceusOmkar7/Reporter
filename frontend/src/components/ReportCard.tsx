@@ -10,7 +10,9 @@ export interface ReportCardProps {
   location: string;
   category: string;
   date: string;
-  votes: number;
+  votes?: number;
+  upvotes: number;
+  downvotes: number;
   image?: string;
   showDetailsButton?: boolean;
   showOnlyButton?: boolean;
@@ -27,9 +29,11 @@ export const ReportCard = ({
   category,
   date,
   votes,
+  upvotes = 0,
+  downvotes = 0,
   image,
-  showDetailsButton = true,
-  showOnlyButton = true,
+  showDetailsButton = false,
+  showOnlyButton = false,
   onVote,
   onShowOnly,
   userVote,
@@ -84,7 +88,7 @@ export const ReportCard = ({
           </div>
         )}
       </div>
-      
+
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex justify-between text-xs text-gray-500 mb-1">
           <span className="capitalize">{category}</span>
@@ -93,65 +97,48 @@ export const ReportCard = ({
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
         <p className="text-sm text-gray-400 mb-2 line-clamp-2">{description}</p>
         <p className="text-xs text-gray-500 mb-4">Location: {location}</p>
-        <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mt-auto flex items-center justify-around">
+          <div className="flex items-center gap-6">
             <div className="flex flex-col items-center">
               <Button
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  userVote === "upvote" 
-                    ? "text-green-500 bg-green-500/10 hover:bg-green-500/20" 
+                  userVote === "upvote"
+                    ? "text-green-500 bg-green-500/10 hover:bg-green-500/20"
                     : "text-gray-400"
                 }`}
                 onClick={(e) => handleVote(e, "upvote")}
               >
                 <ThumbsUp size={20} />
               </Button>
-              <span className="text-xs text-gray-400 mt-1">Like</span>
+              <div className="text-center mt-1">
+                <span className="text-sm font-semibold text-green-400">
+                  {upvotes}
+                </span>
+                <span className="block text-xs text-gray-500">Upvotes</span>
+              </div>
             </div>
             <div className="flex flex-col items-center">
               <Button
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  userVote === "downvote" 
-                    ? "text-red-500 bg-red-500/10 hover:bg-red-500/20" 
+                  userVote === "downvote"
+                    ? "text-red-500 bg-red-500/10 hover:bg-red-500/20"
                     : "text-gray-400"
                 }`}
                 onClick={(e) => handleVote(e, "downvote")}
               >
                 <ThumbsDown size={20} />
               </Button>
-              <span className="text-xs text-gray-400 mt-1">Dislike</span>
+              <div className="text-center mt-1">
+                <span className="text-sm font-semibold text-red-400">
+                  {downvotes}
+                </span>
+                <span className="block text-xs text-gray-500">Downvotes</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-lg font-semibold text-gray-300">{votes}</span>
-              <span className="text-xs text-gray-400">votes</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {showOnlyButton && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
-                onClick={handleShowOnly}
-              >
-                Show Only
-              </Button>
-            )}
-            {showDetailsButton && (
-              <Link to={`/report/${id}`}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
-                >
-                  View Details
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
       </div>
