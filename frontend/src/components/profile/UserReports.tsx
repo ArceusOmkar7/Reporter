@@ -66,7 +66,7 @@ export default function UserReports({
           <div className="flex items-center space-x-2">
             {isCurrentUser && (
               <Button asChild>
-                <Link to="/create-report">
+                <Link to="/new">
                   <Plus className="mr-2 h-4 w-4" />
                   New Report
                 </Link>

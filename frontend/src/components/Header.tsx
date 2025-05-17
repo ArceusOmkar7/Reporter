@@ -37,7 +37,7 @@ export const Header = () => {
       <div className="container flex items-center justify-between py-4">
         {/* Application Logo/Title */}
         <Link to="/" className="text-xl font-bold text-white">
-          Reportr
+          Reporter
         </Link>
 
         {/* Navigation Links */}
