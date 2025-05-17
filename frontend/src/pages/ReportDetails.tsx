@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -43,6 +43,24 @@ const ReportDetails = () => {
     enabled: !!reportId,
   });
 
+  // Fetch user's vote when report loads
+  useEffect(() => {
+    if (report && user?.id) {
+      // Check if user has already voted
+      const checkUserVote = async () => {
+        try {
+          const response = await VoteAPI.getVoteCounts(reportId);
+          if (response.userVote) {
+            setUserVote(response.userVote);
+          }
+        } catch (error) {
+          console.error("Error checking user vote:", error);
+        }
+      };
+      checkUserVote();
+    }
+  }, [report, user?.id, reportId]);
+
   // Mutation for voting
   const voteMutation = useMutation({
     mutationFn: ({
@@ -85,13 +103,61 @@ const ReportDetails = () => {
       return;
     }
 
-    try {
-      voteMutation.mutate({ type, userId: user?.id });
-      setUserVote(type);
-      toast.success(`Your ${type} has been recorded`);
-    } catch (error) {
-      toast.error("Failed to record your vote");
+    // Optimistically update the UI
+    const previousVote = userVote;
+    setUserVote(type);
+
+    // Update vote counts immediately
+    if (report) {
+      const updatedReport = { ...report };
+      if (previousVote === "upvote") {
+        updatedReport.upvotes = (updatedReport.upvotes || 0) - 1;
+      } else if (previousVote === "downvote") {
+        updatedReport.downvotes = (updatedReport.downvotes || 0) - 1;
+      }
+
+      if (type === "upvote") {
+        updatedReport.upvotes = (updatedReport.upvotes || 0) + 1;
+      } else {
+        updatedReport.downvotes = (updatedReport.downvotes || 0) + 1;
+      }
+
+      // Update the report in the cache
+      queryClient.setQueryData(["report", reportId], updatedReport);
     }
+
+    // If user has already voted with the same type, remove the vote
+    if (previousVote === type) {
+      voteMutation.mutate(
+        { type: "upvote", userId: user?.id },
+        {
+          onError: () => {
+            // Revert on error
+            setUserVote(previousVote);
+            queryClient.invalidateQueries({ queryKey: ["report", reportId] });
+            toast.error("Failed to remove your vote");
+          },
+          onSuccess: () => {
+            setUserVote(null);
+            toast.success("Your vote has been removed");
+          }
+        }
+      );
+      return;
+    }
+
+    // If user has voted differently, update the vote
+    voteMutation.mutate(
+      { type, userId: user?.id },
+      {
+        onError: () => {
+          // Revert on error
+          setUserVote(previousVote);
+          queryClient.invalidateQueries({ queryKey: ["report", reportId] });
+          toast.error("Failed to record your vote");
+        },
+      }
+    );
   };
 
   const handleDelete = () => {

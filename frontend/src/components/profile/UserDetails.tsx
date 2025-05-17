@@ -36,9 +36,6 @@ const userFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   middleName: z.string().optional(),
-  contactNumber: z.string()
-    .min(10, "Contact number must be at least 10 characters")
-    .regex(/^[0-9+\-\s()]*$/, "Invalid phone number format"),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -59,7 +56,6 @@ export default function UserDetails({
       firstName: profile.firstName,
       lastName: profile.lastName,
       middleName: profile.middleName || "",
-      contactNumber: profile.contactNumber,
     },
   });
 
@@ -70,7 +66,6 @@ export default function UserDetails({
         firstName: profile.firstName,
         lastName: profile.lastName,
         middleName: profile.middleName || "",
-        contactNumber: profile.contactNumber,
       });
     }
   }, [isEditing, profile, form]);
@@ -85,7 +80,6 @@ export default function UserDetails({
       if (values.firstName !== profile.firstName) updateData.firstName = values.firstName;
       if (values.lastName !== profile.lastName) updateData.lastName = values.lastName;
       if (values.middleName !== profile.middleName) updateData.middleName = values.middleName || null;
-      if (values.contactNumber !== profile.contactNumber) updateData.contactNumber = values.contactNumber;
 
       await UserAPI.updateProfile(profile.userID, updateData);
       setProfile({ ...profile, ...values });
@@ -179,27 +173,12 @@ export default function UserDetails({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="contactNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Number</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Contact Number" 
-                          {...field}
-                          onChange={(e) => {
-                            // Only allow numbers, +, -, spaces, and parentheses
-                            const value = e.target.value.replace(/[^0-9+\-\s()]/g, '');
-                            field.onChange(value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormItem>
+                  <FormLabel>Contact Number</FormLabel>
+                  <FormControl>
+                    <Input value={profile.contactNumber} readOnly disabled />
+                  </FormControl>
+                </FormItem>
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>

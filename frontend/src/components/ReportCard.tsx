@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, ThumbsUp } from "lucide-react";
+import { Eye, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useState } from "react";
 
 export interface ReportCardProps {
@@ -14,8 +14,9 @@ export interface ReportCardProps {
   image?: string;
   showDetailsButton?: boolean;
   showOnlyButton?: boolean;
-  onVote?: (id: number) => void;
+  onVote?: (id: number, type: "upvote" | "downvote") => void;
   onShowOnly?: (category: string) => void;
+  userVote?: "upvote" | "downvote" | null;
 }
 
 export const ReportCard = ({
@@ -31,24 +32,21 @@ export const ReportCard = ({
   showOnlyButton = true,
   onVote,
   onShowOnly,
+  userVote,
 }: ReportCardProps) => {
   const [imageError, setImageError] = useState(false);
 
-  const handleVote = (e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
+  const handleVote = (e: React.MouseEvent, type: "upvote" | "downvote") => {
+    e.stopPropagation();
+    e.preventDefault();
     if (onVote) {
-      onVote(id);
+      onVote(id, type);
     }
   };
 
-  const handleShowOnly = (e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
+  const handleShowOnly = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (onShowOnly) {
       onShowOnly(category);
     }
@@ -86,7 +84,8 @@ export const ReportCard = ({
           </div>
         )}
       </div>
-      <div className="p-4 flex flex-col flex-grow">
+      
+      <div className="p-4 flex-1 flex flex-col">
         <div className="flex justify-between text-xs text-gray-500 mb-1">
           <span className="capitalize">{category}</span>
           <span>{date}</span>
@@ -95,17 +94,26 @@ export const ReportCard = ({
         <p className="text-sm text-gray-400 mb-2 line-clamp-2">{description}</p>
         <p className="text-xs text-gray-500 mb-4">Location: {location}</p>
         <div className="mt-auto flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="p-0 h-auto hover:bg-transparent"
-              onClick={handleVote}
+              className={`p-0 h-auto hover:bg-transparent ${
+                userVote === "upvote" ? "text-green-500" : "text-gray-400"
+              }`}
+              onClick={(e) => handleVote(e, "upvote")}
             >
-              <ThumbsUp
-                size={15}
-                className="text-gray-400 hover:text-gray-300"
-              />
+              <ThumbsUp size={15} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`p-0 h-auto hover:bg-transparent ${
+                userVote === "downvote" ? "text-red-500" : "text-gray-400"
+              }`}
+              onClick={(e) => handleVote(e, "downvote")}
+            >
+              <ThumbsDown size={15} />
             </Button>
             <span className="text-sm">{votes} votes</span>
           </div>
@@ -121,13 +129,15 @@ export const ReportCard = ({
               </Button>
             )}
             {showDetailsButton && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
-              >
-                View Details
-              </Button>
+              <Link to={`/report/${id}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8 bg-transparent border-gray-700 hover:bg-gray-800"
+                >
+                  View Details
+                </Button>
+              </Link>
             )}
           </div>
         </div>

@@ -66,7 +66,7 @@ export default function UserReports({
           <div className="flex items-center space-x-2">
             {isCurrentUser && (
               <Button asChild>
-                <Link to="/create-petition">
+                <Link to="/create-report">
                   <Plus className="mr-2 h-4 w-4" />
                   New Report
                 </Link>
@@ -108,7 +108,7 @@ export default function UserReports({
             <p className="text-muted-foreground mb-4">No reports found</p>
             {isCurrentUser && (
               <Button asChild>
-                <Link to="/create-petition">Create your first report</Link>
+                <Link to="/create-report">Create your first report</Link>
               </Button>
             )}
           </div>

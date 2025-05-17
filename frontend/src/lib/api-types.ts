@@ -149,6 +149,7 @@ export interface ImageResponse {
 export interface VoteCounts {
   upvotes: number;
   downvotes: number;
+  userVote?: "upvote" | "downvote" | null;
 }
 
 export interface VoteCreate {

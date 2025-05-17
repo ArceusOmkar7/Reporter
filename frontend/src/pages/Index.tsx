@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ReportCard } from "@/components/ReportCard";
 import { Header } from "@/components/Header";
 import { useToast } from "@/hooks/use-toast";
-import { ReportAPI } from "@/lib/api-service";
+import { ReportAPI, VoteAPI } from "@/lib/api-service";
 import { API_BASE_URL } from "@/lib/api-config";
 import type { ReportListItem } from "@/lib/api-types";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userVotes, setUserVotes] = useState<Record<number, "upvote" | "downvote" | null>>({});
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   // Fetch random reports on component mount
   useEffect(() => {
@@ -22,6 +26,22 @@ const Index = () => {
         // Get random subset of reports (up to 3)
         const randomReports = data.sort(() => 0.5 - Math.random()).slice(0, 3);
         setReports(randomReports);
+
+        // Fetch user votes for these reports
+        if (user?.id) {
+          const votes: Record<number, "upvote" | "downvote" | null> = {};
+          for (const report of randomReports) {
+            try {
+              const response = await VoteAPI.getVoteCounts(report.reportID);
+              if (response.userVote) {
+                votes[report.reportID] = response.userVote;
+              }
+            } catch (error) {
+              console.error(`Error fetching vote for report ${report.reportID}:`, error);
+            }
+          }
+          setUserVotes(votes);
+        }
       } catch (error) {
         console.error("Failed to fetch reports:", error);
         toast({
@@ -35,25 +55,60 @@ const Index = () => {
     };
 
     fetchReports();
-  }, [toast]);
+  }, [toast, user?.id]);
 
-  const handleVote = (id: number) => {
-    setReports((prevData) =>
-      prevData.map((report) =>
-        report.reportID === id
-          ? { ...report, upvotes: (report.upvotes || 0) + 1 }
-          : report
-      )
-    );
-    toast({
-      title: "Vote recorded",
-      description: "Thank you for supporting this report!",
-    });
+  const handleVote = async (id: number, type: "upvote" | "downvote") => {
+    if (!isAuthenticated) {
+      toast("Please sign in to vote", {
+        action: {
+          label: "Sign in",
+          onClick: () => navigate("/signin"),
+        },
+      });
+      return;
+    }
+
+    try {
+      // If user has already voted with the same type, remove the vote
+      if (userVotes[id] === type) {
+        await VoteAPI.removeVote(id, user?.id);
+        setUserVotes(prev => ({ ...prev, [id]: null }));
+        setReports(prev => prev.map(report => 
+          report.reportID === id 
+            ? { 
+                ...report, 
+                upvotes: type === "upvote" ? (report.upvotes || 0) - 1 : report.upvotes,
+                downvotes: type === "downvote" ? (report.downvotes || 0) - 1 : report.downvotes
+              }
+            : report
+        ));
+        toast.success("Your vote has been removed");
+        return;
+      }
+
+      // If user has voted differently, update the vote
+      await VoteAPI.vote(id, { voteType: type }, user?.id);
+      setUserVotes(prev => ({ ...prev, [id]: type }));
+      
+      // Update the report's vote counts
+      setReports(prev => prev.map(report => {
+        if (report.reportID === id) {
+          const newUpvotes = type === "upvote" ? (report.upvotes || 0) + 1 : (report.upvotes || 0);
+          const newDownvotes = type === "downvote" ? (report.downvotes || 0) + 1 : (report.downvotes || 0);
+          return { ...report, upvotes: newUpvotes, downvotes: newDownvotes };
+        }
+        return report;
+      }));
+
+      toast.success(`Your ${type} has been recorded`);
+    } catch (error) {
+      console.error("Failed to record vote:", error);
+      toast.error("Failed to record your vote");
+    }
   };
 
   const handleShowOnly = (category: string) => {
-    // Navigate to browse page with pre-filtered category
-    window.location.href = `/browse?category=${category}`;
+    navigate(`/browse?category=${category}`);
   };
 
   // Helper function to format report data for ReportCard
@@ -64,7 +119,7 @@ const Index = () => {
     location: `${report.street || ""}, ${report.city || ""}`,
     category: report.categoryName || "Uncategorized",
     date: new Date(report.createdAt).toLocaleDateString(),
-    votes: report.upvotes || 0,
+    votes: (report.upvotes || 0) - (report.downvotes || 0),
     image:
       report.imageCount && report.imageCount > 0
         ? `${API_BASE_URL}/api/image/${report.reportID}`
@@ -129,8 +184,9 @@ const Index = () => {
                   >
                     <ReportCard
                       {...formatReportForCard(report)}
-                      onVote={handleVote}
+                      onVote={(id) => handleVote(id, "upvote")}
                       onShowOnly={handleShowOnly}
+                      userVote={userVotes[report.reportID]}
                     />
                   </Link>
                 ))}
