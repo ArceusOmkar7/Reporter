@@ -8,6 +8,7 @@ import requests
 from werkzeug.utils import secure_filename
 from ..utils.database import get_db_connection
 from ..utils.auth import get_user_id, BaseResponse
+from ..utils.image_helpers import get_images_for_report
 from ..config.config import Config
 
 router = APIRouter()
@@ -44,17 +45,12 @@ async def get_report_images(report_id: int):
     This endpoint does not require authentication.
     """
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT * FROM images WHERE reportID = %s", (report_id,))
-        images = cursor.fetchall()
-        return images
+        # Use the helper function to get appropriate images
+        return get_images_for_report(report_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
+        print(f"Error getting images for report {report_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get images: {str(e)}")
 
 
 @router.post("/{report_id}", response_model=ImageResponse, status_code=status.HTTP_201_CREATED, summary="Upload Image")

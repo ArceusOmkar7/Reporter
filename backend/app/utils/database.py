@@ -9,6 +9,7 @@ import mysql.connector
 from ..config.config import Config
 import os
 import re
+from .setup_default_images import download_default_images
 
 
 def init_database():
@@ -20,10 +21,13 @@ def init_database():
     2. Creates the database if it doesn't exist
     3. Creates tables if they don't exist
     4. Inserts dummy data if tables are empty
+    5. Downloads default category images if needed
 
     Returns:
         bool: True if initialization was needed, False if database was already set up
     """
+    initialization_needed = False
+
     # Try to connect to MySQL without specifying the database
     try:
         conn = mysql.connector.connect(
@@ -91,7 +95,7 @@ def init_database():
                                 raise
 
             print("Initial data inserted successfully.")
-            return True
+            initialization_needed = True
         else:
             # Database exists, check if tables have data
             conn.close()
@@ -133,7 +137,7 @@ def init_database():
                                         raise
 
                     print("Initial data inserted successfully.")
-                    return True
+                    initialization_needed = True
             except mysql.connector.Error:
                 # Table doesn't exist, create tables and insert data
                 print("Database exists but tables are missing. Creating tables...")
@@ -174,12 +178,16 @@ def init_database():
                                     raise
 
                 print("Initial data inserted successfully.")
-                return True
+                initialization_needed = True
+
+        # Download default category images
+        download_default_images()
 
         # Database and tables already exist and have data
-        print(
-            f"Database '{Config.DB_NAME}' already exists and is initialized.")
-        return False
+        if not initialization_needed:
+            print(
+                f"Database '{Config.DB_NAME}' already exists and is initialized.")
+        return initialization_needed
 
     except mysql.connector.Error as e:
         print(f"Error initializing database: {e}")

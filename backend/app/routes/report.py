@@ -1,5 +1,6 @@
 from ..utils.auth import get_user_id, BaseResponse
 from ..utils.database import get_db_connection
+from ..utils.image_helpers import get_images_for_report
 from typing import List, Dict, Any, Optional, cast
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends, Request, Query, status
@@ -190,17 +191,8 @@ async def get_report_details(report_id: int):
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
 
-        # Get images
-        cursor.execute(
-            "SELECT * FROM images WHERE reportID = %s",
-            (report_id,)
-        )
-        images = cursor.fetchall()
-
-        # Convert datetime objects to strings in images
-        for image in images:
-            if image and 'uploadedAt' in image and isinstance(image.get('uploadedAt'), datetime):
-                image['uploadedAt'] = image.get('uploadedAt').isoformat()
+        # Get appropriate images using the helper function
+        images = get_images_for_report(report_id, cursor, conn)
 
         if report:
             report_dict = dict(report)
@@ -208,9 +200,11 @@ async def get_report_details(report_id: int):
 
             # Convert datetime objects to strings in report
             if 'createdAt' in report_dict and isinstance(report_dict.get('createdAt'), datetime):
-                report_dict['createdAt'] = report_dict.get('createdAt').isoformat()
+                report_dict['createdAt'] = report_dict.get(
+                    'createdAt').isoformat()
             if 'updatedAt' in report_dict and isinstance(report_dict.get('updatedAt'), datetime):
-                report_dict['updatedAt'] = report_dict.get('updatedAt').isoformat()
+                report_dict['updatedAt'] = report_dict.get(
+                    'updatedAt').isoformat()
 
             return report_dict
 
@@ -232,8 +226,37 @@ async def create_report(data: ReportCreate, user_id: int = Depends(get_user_id))
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
+        # Print debug info
+        print(
+            f"Creating report with: title={data.title}, description={data.description}, categoryID={data.categoryID}, locationID={data.locationID}, userID={user_id}")
+
+        # Verify the user exists, or use a default user
+        cursor.execute(
+            "SELECT UserID FROM Users WHERE UserID = %s", (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            print(f"User ID {user_id} not found. Using default user ID 1")
+            # User not found - use a default user (first admin)
+            cursor.execute(
+                "SELECT UserID FROM Users WHERE Role = 'Administrator' LIMIT 1")
+            admin = cursor.fetchone()
+
+            if admin:
+                user_id = admin['UserID']
+            else:
+                # If no admin found, use first available user
+                cursor.execute("SELECT UserID FROM Users LIMIT 1")
+                default_user = cursor.fetchone()
+                if default_user:
+                    user_id = default_user['UserID']
+                else:
+                    raise HTTPException(
+                        status_code=400, detail="No valid users found in the system")
+
+        # Now create the report with valid user ID
         cursor.execute(
             """INSERT INTO reports 
             (title, description, categoryID, locationID, userID) 
@@ -244,9 +267,17 @@ async def create_report(data: ReportCreate, user_id: int = Depends(get_user_id))
 
         report_id = cursor.lastrowid
         conn.commit()
+
+        print(f"Report created successfully with ID: {report_id}")
         return {"message": "Report created successfully", "id": report_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Detailed error logging
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR creating report: {str(e)}")
+        print(f"ERROR details: {error_details}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create report: {str(e)}")
     finally:
         cursor.close()
         conn.close()
@@ -274,10 +305,14 @@ async def update_report(report_id: int, data: ReportUpdate, user_id: int = Depen
             raise HTTPException(status_code=404, detail="Report not found")
 
         # Update with new data or keep existing
-        title = data.title if data.title is not None else report.get('title', '')
-        description = data.description if data.description is not None else report.get('description', '')
-        category_id = data.categoryID if data.categoryID is not None else report.get('categoryID', 0)
-        location_id = data.locationID if data.locationID is not None else report.get('locationID', 0)
+        title = data.title if data.title is not None else report.get(
+            'title', '')
+        description = data.description if data.description is not None else report.get(
+            'description', '')
+        category_id = data.categoryID if data.categoryID is not None else report.get(
+            'categoryID', 0)
+        location_id = data.locationID if data.locationID is not None else report.get(
+            'locationID', 0)
 
         cursor.execute(
             """UPDATE reports SET 

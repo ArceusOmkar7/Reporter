@@ -57,18 +57,13 @@ INSERT INTO Reports (Title, Description, LocationID, CategoryID, UserID) VALUES
 ('Abandoned Vehicle', 'Car appears to have been abandoned for several weeks', 4, 1, 4),
 ('Free Health Screening Event', 'Mobile health clinic offering free screenings this Thursday', 5, 5, 10);
 
--- Images Table Inserts
+-- Default Category Images
 INSERT INTO Images (ImageURL, ReportID) VALUES
-('pothole_main_street.jpg', 1),
-('illegal_parking_5th_ave.jpg', 2),
-('river_pollution_shibuya.jpg', 3),
-('fallen_tree_king_street.jpg', 4),
-('community_cleanup_poster.jpg', 5),
-('broken_traffic_light.jpg', 6),
-('library_graffiti.jpg', 7),
-('night_construction.jpg', 8),
-('abandoned_vehicle.jpg', 9),
-('health_screening_flyer.jpg', 10);
+('http://localhost:8000/backend/uploads/default_traffic.jpg', 6),
+('http://localhost:8000/backend/uploads/default_infrastructure.jpg', 1),
+('http://localhost:8000/backend/uploads/default_environment.jpg', 3),
+('http://localhost:8000/backend/uploads/default_public_safety.jpg', 4),
+('http://localhost:8000/backend/uploads/default_community_events.jpg', 5);
 
 -- Votes Table Inserts
 INSERT INTO Votes (ReportID, UserID, VoteType) VALUES
