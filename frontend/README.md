@@ -38,10 +38,10 @@ This is the frontend for the Reporter application, built with React, TypeScript,
      - Sign In (`SignIn.tsx`)
      - Sign Up (`SignUp.tsx`)
    - Report management:
-     - Create Report (`CreatePetition.tsx`)
-     - Edit Report (`EditPetition.tsx`)
-     - Report Details (`PetitionDetails.tsx`)
-     - Browse Reports (`BrowsePetitions.tsx`)
+     - Create Report (`CreateReport.tsx`)
+     - Edit Report (`EditReport.tsx`)
+     - Report Details (`ReportDetails.tsx`)
+     - Browse Reports (`BrowseReports.tsx`)
    - User Profile (`UserProfile.tsx`)
 
 4. **API Integration**
