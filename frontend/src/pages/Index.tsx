@@ -39,16 +39,30 @@ const Index = () => {
                 report.reportID,
                 user?.id
               );
+              console.log(
+                `Vote response for home report ${report.reportID}:`,
+                response
+              );
+
+              // Normalize vote type to lowercase
               if (response.userVote) {
-                votes[report.reportID] = response.userVote;
+                const normalizedVote = response.userVote.toLowerCase();
+                console.log(`Normalized vote: ${normalizedVote}`);
+                votes[report.reportID] = normalizedVote as
+                  | "upvote"
+                  | "downvote";
+              } else {
+                votes[report.reportID] = null;
               }
             } catch (error) {
               console.error(
                 `Error fetching vote for report ${report.reportID}:`,
                 error
               );
+              votes[report.reportID] = null;
             }
           }
+          console.log("All collected votes:", votes);
           setUserVotes(votes);
         }
       } catch (error) {
@@ -80,9 +94,22 @@ const Index = () => {
       return;
     }
 
+    // Get current vote state - normalize to lowercase if needed
+    const currentVoteRaw = userVotes[id];
+    const currentVote = currentVoteRaw
+      ? (currentVoteRaw.toLowerCase() as "upvote" | "downvote")
+      : null;
+
+    console.log("Current vote state before action:", {
+      reportId: id,
+      requestedVote: type,
+      currentVote,
+      rawCurrentVote: currentVoteRaw,
+    });
+
     try {
       // If user has already voted with the same type, remove the vote
-      if (userVotes[id] === type) {
+      if (currentVote === type) {
         const response = await VoteAPI.removeVote(id, user?.id);
         if (response) {
           setUserVotes((prev) => ({ ...prev, [id]: null }));

@@ -55,11 +55,19 @@ const ReportDetails = () => {
       const checkUserVote = async () => {
         try {
           const response = await VoteAPI.getVoteCounts(reportId, user?.id);
+          console.log(`Vote response for report ${reportId}:`, response);
+
+          // Normalize vote type to lowercase
           if (response.userVote) {
-            setUserVote(response.userVote);
+            const normalizedVote = response.userVote.toLowerCase();
+            console.log(`Normalized vote for report: ${normalizedVote}`);
+            setUserVote(normalizedVote);
+          } else {
+            setUserVote(null);
           }
         } catch (error) {
           console.error("Error checking user vote:", error);
+          setUserVote(null);
         }
       };
       checkUserVote();
@@ -123,8 +131,16 @@ const ReportDetails = () => {
       return;
     }
 
+    // Get current vote state - normalize if needed
+    const currentVote = userVote ? userVote.toLowerCase() : null;
+    console.log("Current vote state before action:", {
+      reportId,
+      requestedVote: type,
+      currentVote,
+    });
+
     // Optimistically update the UI
-    const previousVote = userVote;
+    const previousVote = currentVote;
     setUserVote(type);
 
     // Update vote counts immediately
@@ -370,7 +386,7 @@ const ReportDetails = () => {
                   size="lg"
                   className={`flex-1 flex items-center justify-center gap-2 ${
                     userVote === "upvote"
-                      ? "bg-green-900/40 text-green-400 border-green-600 hover:bg-green-900/60"
+                      ? "text-green-400 border-gray-700"
                       : "bg-transparent border-gray-700"
                   }`}
                   onClick={() => handleVote("upvote")}
@@ -388,7 +404,7 @@ const ReportDetails = () => {
                   size="lg"
                   className={`flex-1 flex items-center justify-center gap-2 ${
                     userVote === "downvote"
-                      ? "bg-red-900/40 text-red-400 border-red-600 hover:bg-red-900/60"
+                      ? "text-red-400 border-gray-700"
                       : "bg-transparent border-gray-700"
                   }`}
                   onClick={() => handleVote("downvote")}

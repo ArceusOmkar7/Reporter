@@ -387,9 +387,14 @@ export const VoteAPI = {
     userId?: number
   ): Promise<VoteCounts> => {
     const queryString = userId ? `?user_id=${userId}` : "";
-    return apiRequest<VoteCounts>(
-      `${API_ENDPOINTS.VOTE.GET(reportId)}${queryString}`
+    const endpoint = `${API_ENDPOINTS.VOTE.GET(reportId)}${queryString}`;
+    console.log(
+      `Getting votes for report ${reportId}, user ${userId}, endpoint: ${endpoint}`
     );
+
+    const response = await apiRequest<VoteCounts>(endpoint);
+    console.log(`Raw vote response for report ${reportId}:`, response);
+    return response;
   },
 
   // Vote on a report
@@ -399,6 +404,10 @@ export const VoteAPI = {
     userId?: number
   ): Promise<BaseResponse> => {
     const queryString = userId ? `?user_id=${userId}` : "";
+    console.log(
+      `Voting on report ${reportId}, type: ${voteData.voteType}, user: ${userId}`
+    );
+
     return apiRequest<BaseResponse>(
       `${API_ENDPOINTS.VOTE.VOTE(reportId)}${queryString}`,
       {
@@ -414,6 +423,8 @@ export const VoteAPI = {
     userId?: number
   ): Promise<BaseResponse> => {
     const queryString = userId ? `?user_id=${userId}` : "";
+    console.log(`Removing vote on report ${reportId}, user: ${userId}`);
+
     return apiRequest<BaseResponse>(
       `${API_ENDPOINTS.VOTE.DELETE(reportId)}${queryString}`,
       {

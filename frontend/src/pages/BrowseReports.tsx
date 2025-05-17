@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ReportAPI, CategoryAPI, VoteAPI } from "@/lib/api-service";
 import { ReportListItem, CategoryBase } from "@/lib/api-types";
@@ -29,19 +29,16 @@ const BrowseReports = () => {
     dateFrom: "",
     dateTo: "",
   });
-  const [userVotes, setUserVotes] = useState<
-    Record<number, "upvote" | "downvote" | null>
-  >({});
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch reports based on search parameters
   const {
     data: reports,
     isLoading: isLoadingReports,
     error: reportsError,
-    refetch: refetchReports,
   } = useQuery({
     queryKey: ["reports", searchParams],
     queryFn: async () => {
@@ -80,35 +77,132 @@ const BrowseReports = () => {
     },
   });
 
-  // Fetch user votes - memoized to be called when needed
-  const fetchUserVotes = useCallback(async () => {
-    if (!reports || !user?.id) return;
+  // Fetch votes for user
+  const { data: userVotes = {} } = useQuery({
+    queryKey: [
+      "userVotes",
+      user?.id,
+      reports?.map((r) => r.reportID).join(","),
+    ],
+    queryFn: async () => {
+      if (!reports || !user?.id) return {};
 
-    console.log("Fetching user votes for reports");
-    const votes: Record<number, "upvote" | "downvote" | null> = {};
+      console.log("Fetching user votes for reports, user ID:", user.id);
+      const votes: Record<number, "upvote" | "downvote" | null> = {};
 
-    for (const report of reports) {
-      try {
-        const response = await VoteAPI.getVoteCounts(report.reportID, user?.id);
-        console.log(`Vote for report ${report.reportID}:`, response);
-        votes[report.reportID] = response.userVote || null;
-      } catch (error) {
-        console.error(
-          `Error fetching vote for report ${report.reportID}:`,
-          error
-        );
-        votes[report.reportID] = null;
+      for (const report of reports) {
+        try {
+          const response = await VoteAPI.getVoteCounts(
+            report.reportID,
+            user.id
+          );
+          console.log(`Vote response for report ${report.reportID}:`, response);
+
+          // Normalize vote type to lowercase to handle case sensitivity issues
+          if (response.userVote) {
+            const voteType = response.userVote.toLowerCase();
+            console.log(`Normalized vote type: ${voteType}`);
+
+            if (voteType === "upvote") {
+              votes[report.reportID] = "upvote";
+            } else if (voteType === "downvote") {
+              votes[report.reportID] = "downvote";
+            } else {
+              votes[report.reportID] = null;
+            }
+          } else {
+            votes[report.reportID] = null;
+          }
+        } catch (error) {
+          console.error(
+            `Error fetching vote for report ${report.reportID}:`,
+            error
+          );
+          votes[report.reportID] = null;
+        }
       }
-    }
 
-    console.log("Final collected user votes:", votes);
-    setUserVotes(votes);
-  }, [reports, user?.id]);
+      console.log("Final collected user votes:", votes);
+      return votes;
+    },
+    enabled: !!user?.id && !!reports,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
 
-  // Initial fetch of user votes
-  useEffect(() => {
-    fetchUserVotes();
-  }, [fetchUserVotes]);
+  // Vote mutation
+  const voteMutation = useMutation({
+    mutationFn: async ({
+      reportId,
+      voteType,
+      isRemoving = false,
+    }: {
+      reportId: number;
+      voteType: "upvote" | "downvote";
+      isRemoving?: boolean;
+    }) => {
+      if (isRemoving) {
+        return await VoteAPI.removeVote(reportId, user?.id);
+      } else {
+        return await VoteAPI.vote(reportId, { voteType: voteType }, user?.id);
+      }
+    },
+    onMutate: async ({ reportId, voteType, isRemoving }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["userVotes"] });
+
+      // Snapshot the previous value
+      const previousVotes = queryClient.getQueryData([
+        "userVotes",
+        user?.id,
+        reports?.map((r) => r.reportID).join(","),
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
+        (old: Record<number, string> = {}) => {
+          const updated = { ...old };
+          if (isRemoving) {
+            updated[reportId] = null;
+          } else {
+            updated[reportId] = voteType;
+          }
+          console.log("Optimistic update:", { previous: old, updated });
+          return updated;
+        }
+      );
+
+      return { previousVotes };
+    },
+    onSuccess: (_, variables) => {
+      console.log("Vote mutation succeeded:", variables);
+      // Force refetch the votes data
+      queryClient.invalidateQueries({ queryKey: ["userVotes"] });
+      // Also refetch report data to update counts
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    },
+    onError: (error, variables, context) => {
+      console.error("Vote mutation error:", error);
+      // Roll back to the previous state if there's an error
+      if (context?.previousVotes) {
+        queryClient.setQueryData(
+          ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
+          context.previousVotes
+        );
+      }
+      toast({
+        title: "Error",
+        description: "Failed to record your vote",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to make sure our local data is correct
+      queryClient.invalidateQueries({ queryKey: ["userVotes"] });
+    },
+  });
 
   useEffect(() => {
     console.log("Component state:", {
@@ -142,6 +236,7 @@ const BrowseReports = () => {
     });
   };
 
+  // Handle vote action
   const handleVote = async (
     e: React.MouseEvent,
     reportId: number,
@@ -167,82 +262,65 @@ const BrowseReports = () => {
       return;
     }
 
+    // Get current vote state - normalize any existing vote to lowercase
+    const rawVote = userVotes?.[reportId];
+    const currentVote = rawVote
+      ? (rawVote.toLowerCase() as "upvote" | "downvote")
+      : null;
+
+    console.log("Current vote state before action:", {
+      reportId,
+      requestedVote: type,
+      currentVote,
+      rawVote,
+    });
+
     try {
-      // Save previous vote state
-      const previousVote = userVotes[reportId];
+      // If already voted the same way, remove the vote
+      if (currentVote === type) {
+        // We're removing a vote
+        console.log(`Removing ${type} vote on report ${reportId}`);
 
-      // If user has already voted with the same type, they're toggling it off
-      if (userVotes[reportId] === type) {
-        // Optimistically update UI
-        setUserVotes((prev) => ({ ...prev, [reportId]: null }));
+        voteMutation.mutate({
+          reportId,
+          voteType: type,
+          isRemoving: true,
+        });
 
-        // Update report counts locally
-        const reportToUpdate = reports?.find((r) => r.reportID === reportId);
-        if (reportToUpdate) {
-          if (type === "upvote") {
-            reportToUpdate.upvotes = Math.max(
-              0,
-              (reportToUpdate.upvotes || 0) - 1
-            );
-          } else {
-            reportToUpdate.downvotes = Math.max(
-              0,
-              (reportToUpdate.downvotes || 0) - 1
-            );
+        // Force immediate optimistic update via queryClient
+        queryClient.setQueryData(
+          ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
+          (old: Record<number, string> = {}) => {
+            return { ...old, [reportId]: null };
           }
-        }
+        );
 
-        // Then call API
-        await VoteAPI.removeVote(reportId, user?.id);
         toast({
           title: "Success",
           description: "Your vote has been removed",
         });
+      } else {
+        // We're adding or changing vote
+        console.log(`Setting ${type} vote on report ${reportId}`);
 
-        // Fetch the latest votes after removing
-        await fetchUserVotes();
-        return;
-      }
+        voteMutation.mutate({
+          reportId,
+          voteType: type,
+        });
 
-      // If user is changing vote type (upvote to downvote or vice versa)
-      // Optimistically update UI
-      setUserVotes((prev) => ({ ...prev, [reportId]: type }));
-
-      // Update report counts locally
-      const reportToUpdate = reports?.find((r) => r.reportID === reportId);
-      if (reportToUpdate) {
-        // If changing vote type, decrement previous vote type and increment new one
-        if (previousVote === "upvote" && type === "downvote") {
-          reportToUpdate.upvotes = Math.max(
-            0,
-            (reportToUpdate.upvotes || 0) - 1
-          );
-          reportToUpdate.downvotes = (reportToUpdate.downvotes || 0) + 1;
-        } else if (previousVote === "downvote" && type === "upvote") {
-          reportToUpdate.downvotes = Math.max(
-            0,
-            (reportToUpdate.downvotes || 0) - 1
-          );
-          reportToUpdate.upvotes = (reportToUpdate.upvotes || 0) + 1;
-        } else {
-          // New vote
-          if (type === "upvote") {
-            reportToUpdate.upvotes = (reportToUpdate.upvotes || 0) + 1;
-          } else {
-            reportToUpdate.downvotes = (reportToUpdate.downvotes || 0) + 1;
+        // Force immediate optimistic update via queryClient
+        queryClient.setQueryData(
+          ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
+          (old: Record<number, string> = {}) => {
+            return { ...old, [reportId]: type };
           }
-        }
+        );
+
+        toast({
+          title: "Success",
+          description: `Your ${type} has been recorded`,
+        });
       }
-
-      // Then call API
-      await VoteAPI.vote(reportId, { voteType: type }, user?.id);
-      toast({
-        title: "Success",
-        description: `Your ${type} has been recorded`,
-      });
-
-      // Fetch the latest votes after voting
-      await fetchUserVotes();
     } catch (error) {
       console.error("Failed to record vote:", error);
       toast({
@@ -250,9 +328,6 @@ const BrowseReports = () => {
         description: "Failed to record your vote",
         variant: "destructive",
       });
-
-      // Refresh the votes even on error to ensure UI is consistent
-      await fetchUserVotes();
     }
   };
 
@@ -375,88 +450,102 @@ const BrowseReports = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {reports?.map((report: ReportListItem) => (
-                  <Card
-                    key={report.reportID}
-                    className="bg-gray-900/30 border-gray-800 hover:border-gray-700 transition-all h-full flex flex-col"
-                  >
-                    <Link to={`/reports/${report.reportID}`} className="flex-1">
-                      <CardContent className="p-6 flex-1">
-                        <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                          {report.title}
-                        </h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          {report.categoryName && (
-                            <Badge className="bg-gray-800 hover:bg-gray-800 text-white">
-                              {report.categoryName}
-                            </Badge>
-                          )}
-                          {report.city && report.state && (
-                            <div className="flex items-center gap-1 text-gray-400 text-xs">
-                              <MapPin size={12} />
-                              <span>
-                                {report.city}, {report.state}
-                              </span>
-                            </div>
-                          )}
+                {reports?.map((report: ReportListItem) => {
+                  // Get vote status from state, ensuring correct string comparison
+                  const currentVote = userVotes?.[report.reportID];
+                  const hasUpvote = currentVote === "upvote";
+                  const hasDownvote = currentVote === "downvote";
+
+                  console.log(`Report ${report.reportID} vote status:`, {
+                    reportID: report.reportID,
+                    currentVote,
+                    hasUpvote,
+                    hasDownvote,
+                    rawUserVotes: userVotes,
+                  });
+
+                  return (
+                    <Card
+                      key={report.reportID}
+                      className="bg-gray-900/30 border-gray-800 hover:border-gray-700 transition-all h-full flex flex-col"
+                    >
+                      <Link
+                        to={`/reports/${report.reportID}`}
+                        className="flex-1"
+                      >
+                        <CardContent className="p-6 flex-1">
+                          <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                            {report.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            {report.categoryName && (
+                              <Badge className="bg-gray-800 hover:bg-gray-800 text-white">
+                                {report.categoryName}
+                              </Badge>
+                            )}
+                            {report.city && report.state && (
+                              <div className="flex items-center gap-1 text-gray-400 text-xs">
+                                <MapPin size={12} />
+                                <span>
+                                  {report.city}, {report.state}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-gray-300 line-clamp-3 text-sm">
+                            {report.description}
+                          </p>
+                        </CardContent>
+                      </Link>
+                      <CardFooter className="flex justify-between p-4 border-t border-gray-800">
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={(e) =>
+                              handleVote(e, report.reportID, "upvote")
+                            }
+                            disabled={voteMutation.isPending}
+                            className={`flex items-center gap-1 px-2 py-1 rounded ${
+                              hasUpvote
+                                ? "text-green-400"
+                                : "text-gray-400 hover:text-green-400"
+                            }`}
+                            data-voted={hasUpvote ? "true" : "false"}
+                          >
+                            <ThumbsUp
+                              size={16}
+                              className={hasUpvote ? "fill-green-400" : ""}
+                            />
+                            <span>{report.upvotes || 0}</span>
+                          </button>
+                          <button
+                            onClick={(e) =>
+                              handleVote(e, report.reportID, "downvote")
+                            }
+                            disabled={voteMutation.isPending}
+                            className={`flex items-center gap-1 px-2 py-1 rounded ${
+                              hasDownvote
+                                ? "text-red-400"
+                                : "text-gray-400 hover:text-red-400"
+                            }`}
+                            data-voted={hasDownvote ? "true" : "false"}
+                          >
+                            <ThumbsDown
+                              size={16}
+                              className={hasDownvote ? "fill-red-400" : ""}
+                            />
+                            <span>{report.downvotes || 0}</span>
+                          </button>
                         </div>
-                        <p className="text-gray-300 line-clamp-3 text-sm">
-                          {report.description}
-                        </p>
-                      </CardContent>
-                    </Link>
-                    <CardFooter className="flex justify-between p-4 border-t border-gray-800">
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={(e) =>
-                            handleVote(e, report.reportID, "upvote")
-                          }
-                          className={`flex items-center gap-1 px-2 py-1 rounded ${
-                            userVotes[report.reportID] === "upvote"
-                              ? "text-green-400 bg-green-900/40 border border-green-600"
-                              : "text-gray-400 hover:text-green-400 hover:bg-green-900/20"
-                          }`}
-                        >
-                          <ThumbsUp
-                            size={16}
-                            className={
-                              userVotes[report.reportID] === "upvote"
-                                ? "fill-green-400"
-                                : ""
-                            }
-                          />
-                          <span>{report.upvotes || 0}</span>
-                        </button>
-                        <button
-                          onClick={(e) =>
-                            handleVote(e, report.reportID, "downvote")
-                          }
-                          className={`flex items-center gap-1 px-2 py-1 rounded ${
-                            userVotes[report.reportID] === "downvote"
-                              ? "text-red-400 bg-red-900/40 border border-red-600"
-                              : "text-gray-400 hover:text-red-400 hover:bg-red-900/20"
-                          }`}
-                        >
-                          <ThumbsDown
-                            size={16}
-                            className={
-                              userVotes[report.reportID] === "downvote"
-                                ? "fill-red-400"
-                                : ""
-                            }
-                          />
-                          <span>{report.downvotes || 0}</span>
-                        </button>
-                      </div>
-                      <div className="flex items-center text-gray-400 text-xs">
-                        <Calendar size={12} className="mr-1" />
-                        {formatDistanceToNow(new Date(report.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
+                        <div className="flex items-center text-gray-400 text-xs">
+                          <Calendar size={12} className="mr-1" />
+                          {formatDistanceToNow(new Date(report.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -40,6 +40,10 @@ export const ReportCard = ({
 }: ReportCardProps) => {
   const [imageError, setImageError] = useState(false);
 
+  const normalizedVote = userVote
+    ? (userVote.toLowerCase() as "upvote" | "downvote")
+    : null;
+
   const handleVote = (e: React.MouseEvent, type: "upvote" | "downvote") => {
     e.stopPropagation();
     e.preventDefault();
@@ -104,13 +108,18 @@ export const ReportCard = ({
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  userVote === "upvote"
-                    ? "text-green-500 bg-green-500/10 hover:bg-green-500/20"
+                  normalizedVote === "upvote"
+                    ? "text-green-500"
                     : "text-gray-400"
                 }`}
                 onClick={(e) => handleVote(e, "upvote")}
               >
-                <ThumbsUp size={20} />
+                <ThumbsUp
+                  size={20}
+                  className={
+                    normalizedVote === "upvote" ? "fill-green-500" : ""
+                  }
+                />
               </Button>
               <div className="text-center mt-1">
                 <span className="text-sm font-semibold text-green-400">
@@ -124,13 +133,18 @@ export const ReportCard = ({
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  userVote === "downvote"
-                    ? "text-red-500 bg-red-500/10 hover:bg-red-500/20"
+                  normalizedVote === "downvote"
+                    ? "text-red-500"
                     : "text-gray-400"
                 }`}
                 onClick={(e) => handleVote(e, "downvote")}
               >
-                <ThumbsDown size={20} />
+                <ThumbsDown
+                  size={20}
+                  className={
+                    normalizedVote === "downvote" ? "fill-red-500" : ""
+                  }
+                />
               </Button>
               <div className="text-center mt-1">
                 <span className="text-sm font-semibold text-red-400">
