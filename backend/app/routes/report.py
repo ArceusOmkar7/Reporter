@@ -350,11 +350,20 @@ async def delete_report(report_id: int, user_id: int = Depends(get_user_id)):
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Report not found")
 
-        # Delete report
+        # Delete related records first
+        # Delete votes
+        cursor.execute("DELETE FROM votes WHERE reportID = %s", (report_id,))
+        
+        # Delete images
+        cursor.execute("DELETE FROM images WHERE reportID = %s", (report_id,))
+        
+        # Finally delete the report
         cursor.execute("DELETE FROM reports WHERE reportID = %s", (report_id,))
+        
         conn.commit()
         return {"message": "Report deleted successfully"}
     except Exception as e:
+        conn.rollback()  # Rollback changes if any error occurs
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
