@@ -441,3 +441,51 @@ export const VoteAPI = {
     );
   },
 };
+
+// Analytics API service
+export const AnalyticsAPI = {
+  /**
+   * Get report analytics data
+   *
+   * @returns {Promise<any>} Report analytics data
+   */
+  getReportAnalytics: async (): Promise<any> => {
+    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.REPORTS);
+  },
+
+  /**
+   * Get user analytics data
+   *
+   * @returns {Promise<any>} User analytics data
+   */
+  getUserAnalytics: async (): Promise<any> => {
+    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.USERS);
+  },
+
+  /**
+   * Get location-based insights
+   *
+   * @returns {Promise<any>} Location insights data
+   */
+  getLocationInsights: async (): Promise<any> => {
+    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.LOCATION_INSIGHTS);
+  },
+
+  /**
+   * Get category analysis data
+   *
+   * @returns {Promise<any>} Category analysis data
+   */
+  getCategoryAnalysis: async (): Promise<any> => {
+    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.CATEGORY_ANALYSIS);
+  },
+
+  /**
+   * Get system performance metrics
+   *
+   * @returns {Promise<any>} System performance data
+   */
+  getSystemPerformance: async (): Promise<any> => {
+    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.SYSTEM_PERFORMANCE);
+  },
+};

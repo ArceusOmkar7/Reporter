@@ -50,6 +50,7 @@ def create_app():
             {"name": "Locations", "description": "Location management endpoints"},
             {"name": "Images", "description": "Image management endpoints"},
             {"name": "Votes", "description": "Voting endpoints"},
+            {"name": "Analytics", "description": "Dashboard analytics and statistics"},
             {"name": "Test", "description": "Test endpoints for system verification"}
         ]
     )
@@ -96,6 +97,7 @@ def create_app():
     from .routes.location import router as location_router
     from .routes.image import router as image_router
     from .routes.vote import router as vote_router
+    from .routes.analytics import router as analytics_router
 
     # Include each router with appropriate prefix and tags for OpenAPI documentation
     app.include_router(auth_router, prefix="/api/auth",
@@ -108,6 +110,8 @@ def create_app():
         location_router, prefix="/api/location", tags=["Locations"])
     app.include_router(image_router, prefix="/api/image", tags=["Images"])
     app.include_router(vote_router, prefix="/api/vote", tags=["Votes"])
+    app.include_router(
+        analytics_router, prefix="/api/analytics", tags=["Analytics"])
 
     # Exception handlers
     @app.exception_handler(HTTPException)

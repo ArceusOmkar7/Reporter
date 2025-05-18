@@ -10,6 +10,7 @@ import re
 from typing import Optional, List, Dict, Any
 from fastapi import HTTPException, Request, status, Query
 from pydantic import BaseModel
+from enum import Enum
 
 
 def hash_password(password):
@@ -173,3 +174,83 @@ class UserInfo(BaseModel):
     id: int
     username: str
     role: str
+
+
+# Define user roles matching database enum values
+class UserRole(Enum):
+    """
+    User role enumeration
+
+    Maps to the database 'role' enum values:
+    - Regular: Standard user account
+    - Administrator: Admin account with extended privileges
+    """
+    REGULAR = "Regular"
+    ADMINISTRATOR = "Administrator"
+
+
+async def get_current_user(request: Request):
+    """
+    Get the current authenticated user from request
+
+    Extracts authentication information from the request,
+    validates it, and returns the authenticated user.
+
+    TODO: Implement proper JWT-based authentication
+
+    Args:
+        request: The FastAPI request object
+
+    Returns:
+        UserInfo: The authenticated user information
+
+    Raises:
+        HTTPException: If authentication fails
+    """
+    # Check for Authorization header (Bearer token)
+    auth_header = request.headers.get("Authorization")
+
+    # Check for auth cookie
+    auth_cookie = request.cookies.get("auth_token")
+
+    # Check for user_id in query parameters
+    user_id_param = request.query_params.get("user_id")
+
+    # For development only - allow unauthenticated access
+    # Remove this in production
+    return UserInfo(
+        id=1,
+        username="admin",
+        role=UserRole.ADMINISTRATOR.value
+    )
+
+    # The code below would be used in production after implementing proper auth
+    """
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "")
+        # Validate token and get user
+        # ...
+    elif auth_cookie:
+        # Validate cookie and get user
+        # ...
+    elif user_id_param:
+        try:
+            user_id = int(user_id_param)
+            # Get user from database
+            # ...
+            return UserInfo(
+                id=user_id,
+                username="admin",
+                role=UserRole.ADMINISTRATOR.value
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user ID format"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+    """

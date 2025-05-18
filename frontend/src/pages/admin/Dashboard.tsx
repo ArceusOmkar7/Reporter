@@ -6,6 +6,7 @@
  * - User management
  * - Report management and moderation
  * - Category management
+ * - Analytics and visualizations
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ import { toast } from "sonner";
 import { UserManagement } from "../../components/admin/UserManagement";
 import { ReportManagement } from "../../components/admin/ReportManagement";
 import { CategoryManagement } from "../../components/admin/CategoryManagement";
+import { AnalyticsDashboard } from "../../components/admin/analytics/AnalyticsDashboard";
 import { Loader2 } from "lucide-react";
 import { ReportListItem } from "@/lib/api-types";
 
@@ -128,6 +130,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="reports">Report Management</TabsTrigger>
             <TabsTrigger value="categories">Category Management</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="p-4 border rounded-md">
@@ -140,6 +143,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="categories" className="p-4 border rounded-md">
             <CategoryManagement />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="p-4 border rounded-md">
+            <AnalyticsDashboard />
           </TabsContent>
         </Tabs>
       </div>

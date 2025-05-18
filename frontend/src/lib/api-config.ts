@@ -48,4 +48,12 @@ export const API_ENDPOINTS = {
     VOTE: (reportId: number) => `/api/vote/${reportId}`,
     DELETE: (reportId: number) => `/api/vote/${reportId}`,
   },
+  // Analytics
+  ANALYTICS: {
+    REPORTS: "/api/analytics/reports",
+    USERS: "/api/analytics/users",
+    LOCATION_INSIGHTS: "/api/analytics/location-insights",
+    CATEGORY_ANALYSIS: "/api/analytics/category-analysis",
+    SYSTEM_PERFORMANCE: "/api/analytics/system-performance",
+  },
 };
