@@ -185,7 +185,7 @@ export const UserAPI = {
   ): Promise<BaseResponse> => {
     const queryString = currentUserId ? `?user_id=${currentUserId}` : "";
     return apiRequest<BaseResponse>(
-      `${API_ENDPOINTS.USER.PROFILE(userId)}${queryString}`,
+      `${API_ENDPOINTS.USER.UPDATE(userId)}${queryString}`,
       {
         method: "PUT",
         body: JSON.stringify(profileData),

@@ -23,6 +23,7 @@ class UserProfileResponse(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
+    username: Optional[str] = Field(None, description="User's username")
     firstName: Optional[str] = Field(None, description="User's first name")
     lastName: Optional[str] = Field(None, description="User's last name")
     middleName: Optional[str] = Field(
@@ -30,6 +31,7 @@ class ProfileUpdateRequest(BaseModel):
     email: Optional[str] = Field(None, description="User's email address")
     contactNumber: Optional[str] = Field(
         None, description="User's contact number")
+    role: Optional[str] = Field(None, description="User's role")
 
     @validator('email')
     def validate_email_format(cls, v):
@@ -41,6 +43,24 @@ class ProfileUpdateRequest(BaseModel):
     def validate_phone_format(cls, v):
         if v is not None and not validate_phone(v):
             raise ValueError("Invalid phone number format")
+        return v
+
+    @validator('role')
+    def validate_role(cls, v):
+        if v is not None:
+            v = v.strip()  # Remove any whitespace
+            if v not in ["Regular", "Administrator"]:
+                raise ValueError("Invalid role. Must be either 'Regular' or 'Administrator'")
+        return v
+
+    @validator('username')
+    def validate_username(cls, v):
+        if v is not None:
+            v = v.strip()
+            if not v:
+                raise ValueError("Username cannot be empty")
+            if len(v) < 3:
+                raise ValueError("Username must be at least 3 characters long")
         return v
 
 
@@ -114,26 +134,69 @@ async def update_user_profile(user_id: int, data: ProfileUpdateRequest):
 
         # Check if user exists
         cursor.execute("SELECT * FROM users WHERE userID = %s", (user_id,))
-        if not cursor.fetchone():
+        user = cursor.fetchone()
+        if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # Update username if provided
+        if data.username is not None:
+            # Check if username is already taken
+            cursor.execute(
+                "SELECT userID FROM users WHERE username = %s AND userID != %s",
+                (data.username, user_id)
+            )
+            if cursor.fetchone():
+                raise HTTPException(
+                    status_code=400,
+                    detail="Username is already taken"
+                )
+            cursor.execute(
+                "UPDATE users SET username = %s WHERE userID = %s",
+                (data.username, user_id)
+            )
+
         # Update user info
-        cursor.execute(
-            """UPDATE user_info SET 
-            firstName = COALESCE(%s, firstName), 
-            middleName = COALESCE(%s, middleName), 
-            lastName = COALESCE(%s, lastName), 
-            email = COALESCE(%s, email), 
-            contactNumber = COALESCE(%s, contactNumber) 
-            WHERE userID = %s""",
-            (data.firstName, data.middleName, data.lastName,
-             data.email, data.contactNumber, user_id)
-        )
+        update_fields = []
+        update_values = []
+        
+        if data.firstName is not None:
+            update_fields.append("firstName = %s")
+            update_values.append(data.firstName)
+        if data.middleName is not None:
+            update_fields.append("middleName = %s")
+            update_values.append(data.middleName)
+        if data.lastName is not None:
+            update_fields.append("lastName = %s")
+            update_values.append(data.lastName)
+        if data.email is not None:
+            update_fields.append("email = %s")
+            update_values.append(data.email)
+        if data.contactNumber is not None:
+            update_fields.append("contactNumber = %s")
+            update_values.append(data.contactNumber)
+
+        if update_fields:
+            update_values.append(user_id)
+            query = f"""UPDATE user_info SET {', '.join(update_fields)} 
+                      WHERE userID = %s"""
+            cursor.execute(query, tuple(update_values))
+
+        # Update user role if provided
+        if data.role is not None:
+            cursor.execute(
+                "UPDATE users SET role = %s WHERE userID = %s",
+                (data.role, user_id)
+            )
 
         conn.commit()
         return {"message": "Profile updated successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update profile: {str(e)}"
+        )
     finally:
         cursor.close()
         conn.close()

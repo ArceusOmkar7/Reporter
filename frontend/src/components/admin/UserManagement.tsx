@@ -46,11 +46,13 @@ export function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     userID: 0,
+    username: "",
     firstName: "",
     middleName: "",
     lastName: "",
     email: "",
     contactNumber: "",
+    role: "",
   });
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export function UserManagement() {
 
   const handleRoleChange = async (userId: number, newRole: string) => {
     try {
+      setLoading(true);
       // Update the user's role
       await UserAPI.updateProfile(userId, { role: newRole }, user?.id);
 
@@ -85,45 +88,83 @@ export function UserManagement() {
       toast.success("User role updated successfully");
     } catch (error) {
       console.error("Error updating user role:", error);
-      toast.error("Failed to update user role");
+      toast.error(
+        `Failed to update user role: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const openEditDialog = (user: UserProfileResponse) => {
     setFormData({
       userID: user.userID,
+      username: user.username,
       firstName: user.firstName,
       middleName: user.middleName || "",
       lastName: user.lastName,
       email: user.email,
       contactNumber: user.contactNumber,
+      role: user.role,
     });
     setIsDialogOpen(true);
   };
 
   const handleEditUser = async () => {
     try {
+      setLoading(true);
       // Validate required fields
       if (
         !formData.firstName ||
         !formData.lastName ||
         !formData.email ||
-        !formData.contactNumber
+        !formData.contactNumber ||
+        !formData.username
       ) {
         toast.error("Please fill all required fields");
         return;
       }
 
-      const updatedProfile = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        contactNumber: formData.contactNumber,
-        // Only include middleName if it has a value
-        ...(formData.middleName
-          ? { middleName: formData.middleName }
-          : { middleName: null }),
-      };
+      // Find the original user data
+      const originalUser = users.find(u => u.userID === formData.userID);
+      if (!originalUser) {
+        toast.error("User not found");
+        return;
+      }
+
+      // Only include fields that have changed
+      const updatedProfile: Partial<UserProfileResponse> = {};
+      
+      if (formData.username !== originalUser.username) {
+        updatedProfile.username = formData.username;
+      }
+      if (formData.firstName !== originalUser.firstName) {
+        updatedProfile.firstName = formData.firstName;
+      }
+      if (formData.lastName !== originalUser.lastName) {
+        updatedProfile.lastName = formData.lastName;
+      }
+      if (formData.middleName !== originalUser.middleName) {
+        updatedProfile.middleName = formData.middleName || null;
+      }
+      if (formData.email !== originalUser.email) {
+        updatedProfile.email = formData.email;
+      }
+      if (formData.contactNumber !== originalUser.contactNumber) {
+        updatedProfile.contactNumber = formData.contactNumber;
+      }
+      if (formData.role !== originalUser.role) {
+        updatedProfile.role = formData.role;
+      }
+
+      // If no fields have changed, show a message and return
+      if (Object.keys(updatedProfile).length === 0) {
+        toast.info("No changes to save");
+        setIsDialogOpen(false);
+        return;
+      }
 
       console.log("Sending profile update:", updatedProfile);
 
@@ -132,17 +173,13 @@ export function UserManagement() {
 
       // Update local state
       setUsers(
-        users.map((user) =>
-          user.userID === formData.userID
+        users.map((u) =>
+          u.userID === formData.userID
             ? {
-                ...user,
-                firstName: formData.firstName,
-                middleName: formData.middleName || null,
-                lastName: formData.lastName,
-                email: formData.email,
-                contactNumber: formData.contactNumber,
+                ...u,
+                ...updatedProfile,
               }
-            : user
+            : u
         )
       );
 
@@ -150,11 +187,10 @@ export function UserManagement() {
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error updating user details:", error);
-      toast.error(
-        `Failed to update user details: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to update user details: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -230,9 +266,7 @@ export function UserManagement() {
                         onClick={() =>
                           handleRoleChange(
                             user.userID,
-                            user.role === "Administrator"
-                              ? "Regular"
-                              : "Administrator"
+                            user.role === "Administrator" ? "Regular" : "Administrator"
                           )
                         }
                       >
@@ -261,6 +295,19 @@ export function UserManagement() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-right">
+                Username
+              </Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="firstName" className="text-right">
                 First Name
               </Label>
@@ -284,6 +331,7 @@ export function UserManagement() {
                   setFormData({ ...formData, middleName: e.target.value })
                 }
                 className="col-span-3"
+                placeholder="Optional"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -325,10 +373,33 @@ export function UserManagement() {
                 className="col-span-3"
               />
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="role" className="text-right">
+                Role
+              </Label>
+              <select
+                id="role"
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
+                className="col-span-3 p-2 border rounded-md"
+              >
+                <option value="Regular">Regular</option>
+                <option value="Administrator">Administrator</option>
+              </select>
+            </div>
           </div>
           <DialogFooter>
-            <Button type="submit" onClick={handleEditUser}>
-              Save changes
+            <Button type="submit" onClick={handleEditUser} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save changes"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

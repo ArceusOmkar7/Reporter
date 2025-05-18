@@ -14,6 +14,7 @@ export const API_ENDPOINTS = {
   USER: {
     ALL: "/api/user/all",
     PROFILE: (id: number) => `/api/user/profile/${id}`,
+    UPDATE: (id: number) => `/api/user/profile/${id}`,
   },
   // Reports
   REPORT: {
