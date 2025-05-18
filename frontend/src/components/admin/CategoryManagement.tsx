@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import { CategoryAPI } from "@/lib/api-service";
 import { CategoryBase } from "@/lib/api-types";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Table,
   TableBody,
@@ -42,6 +43,7 @@ import { toast } from "sonner";
 import { Loader2, MoreHorizontal, Edit, Trash, Plus } from "lucide-react";
 
 export function CategoryManagement() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<CategoryBase[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -91,8 +93,17 @@ export function CategoryManagement() {
 
   const handleEditCategory = async () => {
     try {
-      // Edit category API call would go here
-      // For now, just simulate editing it locally
+      // Call the API to update the category
+      await CategoryAPI.update(
+        formData.categoryID,
+        {
+          name: formData.categoryName,
+          description: formData.categoryDescription,
+        },
+        user?.id // Pass the user ID from auth context
+      );
+
+      // Update local state to reflect the changes
       const updatedCategories = categories.map((category) =>
         category.categoryID === formData.categoryID ? formData : category
       );
@@ -109,8 +120,10 @@ export function CategoryManagement() {
 
   const handleDeleteCategory = async (categoryId: number) => {
     try {
-      // Delete category API call would go here
-      // For now, just simulate deleting it locally
+      // Call the API to delete the category
+      await CategoryAPI.delete(categoryId, user?.id); // Pass the user ID from auth context
+
+      // Update local state by removing the deleted category
       setCategories(categories.filter((c) => c.categoryID !== categoryId));
       toast.success("Category deleted successfully");
     } catch (error) {

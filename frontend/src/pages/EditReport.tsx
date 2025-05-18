@@ -76,7 +76,9 @@ const EditReport = () => {
 
   // Check if user is authorized to edit (is report owner)
   const isOwner = user?.id === report.userID;
-  if (!isOwner) {
+  const isAdmin = user?.role === "Administrator";
+
+  if (!isOwner && !isAdmin) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col">
         <Header />

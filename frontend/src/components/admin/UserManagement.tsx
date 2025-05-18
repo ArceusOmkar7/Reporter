@@ -9,6 +9,7 @@
 import { useState, useEffect } from "react";
 import { UserAPI } from "@/lib/api-service";
 import { UserProfileResponse } from "@/lib/api-types";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Table,
   TableBody,
@@ -24,13 +25,33 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, MoreHorizontal, Edit, UserCog } from "lucide-react";
 
 export function UserManagement() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserProfileResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    userID: 0,
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    contactNumber: "",
+  });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -52,7 +73,7 @@ export function UserManagement() {
   const handleRoleChange = async (userId: number, newRole: string) => {
     try {
       // Update the user's role
-      await UserAPI.updateProfile(userId, { role: newRole });
+      await UserAPI.updateProfile(userId, { role: newRole }, user?.id);
 
       // Update the local state with the new role
       setUsers(
@@ -65,6 +86,75 @@ export function UserManagement() {
     } catch (error) {
       console.error("Error updating user role:", error);
       toast.error("Failed to update user role");
+    }
+  };
+
+  const openEditDialog = (user: UserProfileResponse) => {
+    setFormData({
+      userID: user.userID,
+      firstName: user.firstName,
+      middleName: user.middleName || "",
+      lastName: user.lastName,
+      email: user.email,
+      contactNumber: user.contactNumber,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEditUser = async () => {
+    try {
+      // Validate required fields
+      if (
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.email ||
+        !formData.contactNumber
+      ) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      const updatedProfile = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+        // Only include middleName if it has a value
+        ...(formData.middleName
+          ? { middleName: formData.middleName }
+          : { middleName: null }),
+      };
+
+      console.log("Sending profile update:", updatedProfile);
+
+      // Update user profile
+      await UserAPI.updateProfile(formData.userID, updatedProfile, user?.id);
+
+      // Update local state
+      setUsers(
+        users.map((user) =>
+          user.userID === formData.userID
+            ? {
+                ...user,
+                firstName: formData.firstName,
+                middleName: formData.middleName || null,
+                lastName: formData.lastName,
+                email: formData.email,
+                contactNumber: formData.contactNumber,
+              }
+            : user
+        )
+      );
+
+      toast.success("User details updated successfully");
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating user details:", error);
+      toast.error(
+        `Failed to update user details: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -128,7 +218,10 @@ export function UserManagement() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => openEditDialog(user)}
+                      >
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Details
                       </DropdownMenuItem>
@@ -156,6 +249,90 @@ export function UserManagement() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit User Details</DialogTitle>
+            <DialogDescription>
+              Make changes to the user's details here. Click save when you're
+              done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="firstName" className="text-right">
+                First Name
+              </Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="middleName" className="text-right">
+                Middle Name
+              </Label>
+              <Input
+                id="middleName"
+                value={formData.middleName}
+                onChange={(e) =>
+                  setFormData({ ...formData, middleName: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="lastName" className="text-right">
+                Last Name
+              </Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="contactNumber" className="text-right">
+                Contact Number
+              </Label>
+              <Input
+                id="contactNumber"
+                value={formData.contactNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactNumber: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleEditUser}>
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

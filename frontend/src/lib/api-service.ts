@@ -175,16 +175,22 @@ export const UserAPI = {
    *
    * @param {number} userId - ID of user to update
    * @param {Partial<UserProfileResponse>} profileData - Updated profile data
+   * @param {number} [currentUserId] - ID of the current user making the request
    * @returns {Promise<BaseResponse>} Confirmation message
    */
   updateProfile: async (
     userId: number,
-    profileData: Partial<UserProfileResponse>
+    profileData: Partial<UserProfileResponse>,
+    currentUserId?: number
   ): Promise<BaseResponse> => {
-    return apiRequest<BaseResponse>(API_ENDPOINTS.USER.PROFILE(userId), {
-      method: "PUT",
-      body: JSON.stringify(profileData),
-    });
+    const queryString = currentUserId ? `?user_id=${currentUserId}` : "";
+    return apiRequest<BaseResponse>(
+      `${API_ENDPOINTS.USER.PROFILE(userId)}${queryString}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(profileData),
+      }
+    );
   },
 };
 
@@ -286,6 +292,36 @@ export const CategoryAPI = {
   // Get category by ID
   getDetails: async (categoryId: number): Promise<CategoryBase> => {
     return apiRequest<CategoryBase>(API_ENDPOINTS.CATEGORY.DETAILS(categoryId));
+  },
+
+  // Update a category
+  update: async (
+    categoryId: number,
+    categoryData: { name: string; description: string },
+    userId?: number
+  ): Promise<BaseResponse> => {
+    const queryString = userId ? `?user_id=${userId}` : "";
+    return apiRequest<BaseResponse>(
+      `${API_ENDPOINTS.CATEGORY.DETAILS(categoryId)}${queryString}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(categoryData),
+      }
+    );
+  },
+
+  // Delete a category
+  delete: async (
+    categoryId: number,
+    userId?: number
+  ): Promise<BaseResponse> => {
+    const queryString = userId ? `?user_id=${userId}` : "";
+    return apiRequest<BaseResponse>(
+      `${API_ENDPOINTS.CATEGORY.DETAILS(categoryId)}${queryString}`,
+      {
+        method: "DELETE",
+      }
+    );
   },
 };
 

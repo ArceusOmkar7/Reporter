@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { ReportAPI } from "@/lib/api-service";
 import { ReportListItem } from "@/lib/api-types";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import { Link } from "react-router-dom";
 import { Loader2, MoreHorizontal, FileText, Trash2, Edit } from "lucide-react";
 
 export function ReportManagement() {
+  const { user } = useAuth();
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,10 +53,10 @@ export function ReportManagement() {
 
   const handleDeleteReport = async (reportId: number) => {
     try {
-      // This would be an API call in a real system
-      // await ReportAPI.delete(reportId);
+      // Call the API to delete the report
+      await ReportAPI.delete(reportId, user?.id);
 
-      // For now, just update the local state
+      // Update local state
       setReports(reports.filter((report) => report.reportID !== reportId));
       toast.success("Report deleted successfully");
     } catch (error) {
