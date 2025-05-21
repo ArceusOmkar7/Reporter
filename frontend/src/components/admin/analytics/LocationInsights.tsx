@@ -126,8 +126,8 @@ export function LocationInsights() {
   // Filters
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(
-    undefined
+  const [selectedCategory, setSelectedCategory] = useState<string | number>(
+    "all"
   );
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
 
@@ -191,7 +191,8 @@ export function LocationInsights() {
 
       if (startDate) filters.startDate = startDate;
       if (endDate) filters.endDate = endDate;
-      if (selectedCategory) filters.categoryId = selectedCategory;
+      if (selectedCategory && selectedCategory !== "all")
+        filters.categoryId = selectedCategory;
 
       const filteredData = await AnalyticsAPI.getFilteredHeatmapData(filters);
       setFilteredHeatmapData(filteredData);
@@ -210,7 +211,7 @@ export function LocationInsights() {
   const handleResetFilters = async () => {
     setStartDate("");
     setEndDate("");
-    setSelectedCategory(undefined);
+    setSelectedCategory("all");
     setIsFiltered(false);
     setFilteredHeatmapData(null);
 
@@ -345,7 +346,7 @@ export function LocationInsights() {
                   Filter
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80">
+              <PopoverContent className="w-80 z-[9999]">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <h4 className="font-medium leading-none">Filter Heatmap</h4>
@@ -378,14 +379,16 @@ export function LocationInsights() {
                       <Select
                         value={selectedCategory?.toString()}
                         onValueChange={(val) =>
-                          setSelectedCategory(Number(val))
+                          setSelectedCategory(
+                            val === "all" ? "all" : Number(val)
+                          )
                         }
                       >
                         <SelectTrigger id="category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                        <SelectContent className="z-[9999]">
+                          <SelectItem value="all">All Categories</SelectItem>
                           {categories.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id.toString()}>
                               {cat.name}
@@ -407,7 +410,10 @@ export function LocationInsights() {
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div ref={mapContainerRef} className="rounded-md h-[500px] w-full" />
+          <div
+            ref={mapContainerRef}
+            className="rounded-md h-[500px] w-full relative z-0"
+          />
 
           {isFiltered && filteredHeatmapData && (
             <div className="mt-2 text-sm bg-muted/20 p-3 rounded-md">
