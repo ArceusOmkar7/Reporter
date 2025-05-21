@@ -508,6 +508,54 @@ export const AnalyticsAPI = {
   },
 
   /**
+   * Get filtered heatmap data for location analytics
+   *
+   * @param {Object} filters - Optional filters
+   * @param {string} filters.startDate - Start date for filtering (ISO string)
+   * @param {string} filters.endDate - End date for filtering (ISO string)
+   * @param {number} filters.categoryId - Category ID for filtering
+   * @returns {Promise<any>} Filtered heatmap data
+   */
+  getFilteredHeatmapData: async (filters?: {
+    startDate?: string;
+    endDate?: string;
+    categoryId?: number;
+  }): Promise<any> => {
+    const params = new URLSearchParams();
+
+    if (filters?.startDate) {
+      params.append("start_date", filters.startDate);
+    }
+
+    if (filters?.endDate) {
+      params.append("end_date", filters.endDate);
+    }
+
+    if (filters?.categoryId) {
+      params.append("category_id", filters.categoryId.toString());
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any>(
+      `${API_ENDPOINTS.ANALYTICS.FILTERED_HEATMAP}${queryString}`
+    );
+  },
+
+  /**
+   * Get location trends over time
+   *
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', or 'monthly'
+   * @returns {Promise<any>} Location trend data
+   */
+  getLocationTrends: async (
+    period: "daily" | "weekly" | "monthly" = "monthly"
+  ): Promise<any> => {
+    return apiRequest<any>(
+      `${API_ENDPOINTS.ANALYTICS.LOCATION_TRENDS}?period=${period}`
+    );
+  },
+
+  /**
    * Get category analysis data
    *
    * @returns {Promise<any>} Category analysis data

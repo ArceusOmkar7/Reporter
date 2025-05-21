@@ -54,6 +54,8 @@ export const API_ENDPOINTS = {
     REPORTS: "/api/analytics/reports",
     USERS: "/api/analytics/users",
     LOCATION_INSIGHTS: "/api/analytics/location-insights",
+    FILTERED_HEATMAP: "/api/analytics/filtered-heatmap",
+    LOCATION_TRENDS: "/api/analytics/location-trends",
     CATEGORY_ANALYSIS: "/api/analytics/category-analysis",
     SYSTEM_PERFORMANCE: "/api/analytics/system-performance",
   },
