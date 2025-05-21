@@ -73,15 +73,19 @@ export function CategoryManagement() {
 
   const handleAddCategory = async () => {
     try {
-      // Create category API call would go here
-      // For now, just simulate adding it locally
-      const newCategory = {
-        categoryID: Math.max(...categories.map((c) => c.categoryID), 0) + 1,
-        categoryName: formData.categoryName,
-        categoryDescription: formData.categoryDescription,
-      };
+      // Call the API to create the category
+      const response = await CategoryAPI.create(
+        {
+          name: formData.categoryName,
+          description: formData.categoryDescription,
+        },
+        user?.id // Pass the user ID from auth context
+      );
 
-      setCategories([...categories, newCategory]);
+      // Fetch updated categories from the server
+      const allCategories = await CategoryAPI.getAll();
+      setCategories(allCategories);
+
       toast.success("Category added successfully");
       resetForm();
       setIsDialogOpen(false);
