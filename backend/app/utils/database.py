@@ -9,7 +9,6 @@ import mysql.connector
 from ..config.config import Config
 import os
 import re
-from .setup_default_images import download_default_images
 
 
 def init_database():
@@ -21,7 +20,6 @@ def init_database():
     2. Creates the database if it doesn't exist
     3. Creates tables if they don't exist
     4. Inserts dummy data if tables are empty
-    5. Downloads default category images if needed
 
     Returns:
         bool: True if initialization was needed, False if database was already set up
@@ -179,9 +177,6 @@ def init_database():
 
                 print("Initial data inserted successfully.")
                 initialization_needed = True
-
-        # Download default category images
-        download_default_images()
 
         # Database and tables already exist and have data
         if not initialization_needed:

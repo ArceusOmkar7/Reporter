@@ -4,12 +4,16 @@ interface ImageWithFallbackProps {
   src: string;
   alt: string;
   className?: string;
+  categoryName?: string;
+  isHomePage?: boolean;
 }
 
 export const ImageWithFallback = ({
   src,
   alt,
   className,
+  categoryName,
+  isHomePage = false,
 }: ImageWithFallbackProps) => {
   const [error, setError] = useState(false);
 
@@ -19,6 +23,24 @@ export const ImageWithFallback = ({
       setError(true);
     }
   };
+
+  // If we're on the home page and either there's an error loading the image or the image is the placeholder SVG,
+  // and a category name is provided, use placehold.co
+  if (
+    (error || src === "/placeholder-report.svg") &&
+    isHomePage &&
+    categoryName
+  ) {
+    // Use placehold.co with the category name and a nice color scheme
+    const encodedCategoryName = encodeURIComponent(categoryName);
+    return (
+      <img
+        src={`https://placehold.co/600x400/1f2937/ffffff?text=${encodedCategoryName}`}
+        alt={`${categoryName} category`}
+        className={className || "w-full h-auto object-cover"}
+      />
+    );
+  }
 
   // If the image src is just a filename or a relative path, try to construct a full URL
   let imageSrc = src;

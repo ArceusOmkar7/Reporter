@@ -245,7 +245,6 @@ const Index = () => {
             </div>
           </div>
         </section>
-
         <section className="py-16 bg-gray-900/30">
           <div className="container max-w-6xl mx-auto px-4">
             <div className="flex justify-between items-center mb-10">
@@ -279,6 +278,7 @@ const Index = () => {
                       onVote={handleReportCardVote}
                       onShowOnly={handleShowOnly}
                       userVote={userVotes[report.reportID]}
+                      isHomePage={true}
                     />
                   </Link>
                 ))}
@@ -295,7 +295,6 @@ const Index = () => {
             )}
           </div>
         </section>
-
         <section className="py-16">
           <div className="container max-w-4xl mx-auto px-4">
             <h2 className="text-2xl font-bold mb-10 text-center">
@@ -341,7 +340,7 @@ const Index = () => {
               </Link>
             </div>
           </div>
-        </section>
+        </section>{" "}
       </main>
     </div>
   );

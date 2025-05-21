@@ -57,14 +57,6 @@ INSERT INTO Reports (Title, Description, LocationID, CategoryID, UserID) VALUES
 ('Abandoned Vehicle in Jubilee Hills', 'Car appears to have been abandoned for several weeks near Road No. 5', 5, 1, 4),
 ('Free Medical Camp at Gandhi Maidan', 'Mobile health clinic offering free screenings and medicines this Sunday', 3, 5, 10);
 
--- Default Category Images
-INSERT INTO Images (ImageURL, ReportID) VALUES
-('http://localhost:8000/backend/uploads/default_traffic.jpg', 6),
-('http://localhost:8000/backend/uploads/default_infrastructure.jpg', 1),
-('http://localhost:8000/backend/uploads/default_environment.jpg', 3),
-('http://localhost:8000/backend/uploads/default_public_safety.jpg', 4),
-('http://localhost:8000/backend/uploads/default_community_events.jpg', 5);
-
 -- Votes Table Inserts (making sure some reports have negative votes)
 INSERT INTO Votes (ReportID, UserID, VoteType) VALUES
 (1, 2, 'Upvote'),

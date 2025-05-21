@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useState } from "react";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 
 export interface ReportCardProps {
   id: number;
@@ -19,6 +20,7 @@ export interface ReportCardProps {
   onVote?: (id: number, type: "upvote" | "downvote") => void;
   onShowOnly?: (category: string) => void;
   userVote?: "upvote" | "downvote" | null;
+  isHomePage?: boolean;
 }
 
 export const ReportCard = ({
@@ -37,9 +39,8 @@ export const ReportCard = ({
   onVote,
   onShowOnly,
   userVote,
+  isHomePage = false,
 }: ReportCardProps) => {
-  const [imageError, setImageError] = useState(false);
-
   const normalizedVote = userVote
     ? (userVote.toLowerCase() as "upvote" | "downvote")
     : null;
@@ -60,19 +61,16 @@ export const ReportCard = ({
     }
   };
 
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
   return (
     <div className="flex flex-col h-full bg-gray-900/30 rounded-lg overflow-hidden hover:bg-gray-900/40">
       <div className="overflow-hidden mb-4 h-48">
-        {image && !imageError ? (
-          <img
+        {image ? (
+          <ImageWithFallback
             src={image}
             alt={title}
             className="h-full w-full object-cover"
-            onError={handleImageError}
+            categoryName={category}
+            isHomePage={isHomePage}
           />
         ) : (
           <div className="image-placeholder h-full w-full bg-gray-800/50 flex items-center justify-center">
