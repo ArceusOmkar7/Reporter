@@ -50,7 +50,8 @@ class ProfileUpdateRequest(BaseModel):
         if v is not None:
             v = v.strip()  # Remove any whitespace
             if v not in ["Regular", "Administrator"]:
-                raise ValueError("Invalid role. Must be either 'Regular' or 'Administrator'")
+                raise ValueError(
+                    "Invalid role. Must be either 'Regular' or 'Administrator'")
         return v
 
     @validator('username')
@@ -158,7 +159,7 @@ async def update_user_profile(user_id: int, data: ProfileUpdateRequest):
         # Update user info
         update_fields = []
         update_values = []
-        
+
         if data.firstName is not None:
             update_fields.append("firstName = %s")
             update_values.append(data.firstName)
@@ -200,3 +201,78 @@ async def update_user_profile(user_id: int, data: ProfileUpdateRequest):
     finally:
         cursor.close()
         conn.close()
+
+
+@router.delete("/profile/{user_id}", response_model=BaseResponse, summary="Delete User Profile")
+async def delete_user_profile(user_id: int, current_user_id: Optional[int] = None):
+    """
+    Delete user profile
+
+    Deletes a specific user by their ID.
+    An admin cannot delete their own account.
+    Requires `current_user_id` to be passed as a query parameter for authorization.
+    """
+    if current_user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current user ID is required for this operation."
+        )
+
+    if user_id == current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrators cannot delete their own accounts."
+        )
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if the current user is an administrator
+        cursor.execute(
+            "SELECT role FROM users WHERE userID = %s", (current_user_id,))
+        admin_user = cursor.fetchone()
+        if not admin_user or admin_user[0] != 'Administrator':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can delete users."
+            )
+
+        # Check if the user to be deleted exists
+        cursor.execute(
+            "SELECT userID FROM users WHERE userID = %s", (user_id,))
+        user_to_delete = cursor.fetchone()
+        if not user_to_delete:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User to delete not found")
+
+        # Proceed with deletion
+        # Note: Consider what to do with related data (e.g., reports, votes).
+        # For this example, we'll delete from user_info and then users.
+        # You might need to handle foreign key constraints or decide on a soft delete strategy.
+
+        cursor.execute("DELETE FROM user_info WHERE userID = %s", (user_id,))
+        cursor.execute("DELETE FROM users WHERE userID = %s", (user_id,))
+
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            # This case should ideally be caught by the "User to delete not found" check,
+            # but it's a safeguard.
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User not found or already deleted.")
+
+        return {"message": "User deleted successfully"}
+    except HTTPException:
+        raise  # Re-raise HTTPException to return specific error responses
+    except Exception as e:
+        # Log the full error for debugging
+        print(f"Error deleting user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {str(e)}"
+        )
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()

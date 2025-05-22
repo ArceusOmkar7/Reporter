@@ -47,7 +47,9 @@ export function BasicInfoStep({
   return (
     <div className="space-y-6">
       <div className="grid gap-2">
-        <Label htmlFor="title">Petition Title</Label>
+        <Label htmlFor="title" className="text-foreground">
+          Petition Title
+        </Label>
         <Input
           id="title"
           name="title"
@@ -55,15 +57,17 @@ export function BasicInfoStep({
           onChange={onBasicInfoChange}
           placeholder="Enter a clear, specific title"
           required
-          className="bg-transparent border-gray-700"
+          className="bg-background text-foreground border-border focus:ring-ring"
         />
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Be specific and summarize your issue
         </p>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="description">Petition Description</Label>
+        <Label htmlFor="description" className="text-foreground">
+          Petition Description
+        </Label>
         <Textarea
           id="description"
           name="description"
@@ -71,22 +75,28 @@ export function BasicInfoStep({
           onChange={onBasicInfoChange}
           placeholder="Describe your issue in detail..."
           required
-          className="min-h-[200px] bg-transparent border-gray-700"
+          className="min-h-[200px] bg-background text-foreground border-border focus:ring-ring"
         />
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Explain the issue, why it matters, and what change you want to see
         </p>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="category">Category</Label>
+        <Label htmlFor="category" className="text-foreground">
+          Category
+        </Label>
         <Select value={basicInfo.category} onValueChange={onCategoryChange}>
-          <SelectTrigger className="bg-transparent border-gray-700">
+          <SelectTrigger className="bg-background text-foreground border-border focus:ring-ring">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-900 border-gray-700">
+          <SelectContent className="bg-popover text-popover-foreground border-border">
             {isLoadingCategories ? (
-              <SelectItem value="loading" disabled>
+              <SelectItem
+                value="loading"
+                disabled
+                className="text-muted-foreground"
+              >
                 Loading categories...
               </SelectItem>
             ) : (
@@ -94,6 +104,7 @@ export function BasicInfoStep({
                 <SelectItem
                   key={category.categoryID}
                   value={`${category.categoryName}|${category.categoryID}`}
+                  className="hover:bg-accent hover:text-accent-foreground"
                 >
                   {category.categoryName}
                 </SelectItem>
@@ -101,7 +112,7 @@ export function BasicInfoStep({
             )}
           </SelectContent>
         </Select>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Choose the most relevant category for your petition
         </p>
       </div>

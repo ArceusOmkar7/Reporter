@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS User_Info (
     lastName VARCHAR(32) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
     contactNumber VARCHAR(12) UNIQUE NOT NULL,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 -- Categories Table
@@ -53,9 +53,9 @@ CREATE TABLE IF NOT EXISTS Reports (
     locationID INT NOT NULL,
     categoryID INT NOT NULL,
     userID INT NOT NULL,
-    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID),
-    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID) ON DELETE CASCADE,
+    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 -- Images Table
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS Images (
     imageURL VARCHAR(255) NOT NULL,
     reportID INT NOT NULL,
     uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ReportID) REFERENCES Reports(ReportID)
+    FOREIGN KEY (ReportID) REFERENCES Reports(ReportID) ON DELETE CASCADE
 );
 
 -- Votes Table
@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS Votes (
     userID INT NOT NULL,
     voteType ENUM('Upvote', 'Downvote') NOT NULL,
     votedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ReportID) REFERENCES Reports(ReportID),
-    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    FOREIGN KEY (ReportID) REFERENCES Reports(ReportID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 COMMIT;

@@ -192,6 +192,28 @@ export const UserAPI = {
       }
     );
   },
+
+  /**
+   * Delete user by ID
+   *
+   * @param {number} userId - ID of user to delete
+   * @param {number} [currentUserId] - ID of the current user making the request (admin)
+   * @returns {Promise<BaseResponse>} Confirmation message
+   */
+  delete: async (
+    userId: number,
+    currentUserId?: number
+  ): Promise<BaseResponse> => {
+    const queryString = currentUserId
+      ? `?current_user_id=${currentUserId}`
+      : "";
+    return apiRequest<BaseResponse>(
+      `${API_ENDPOINTS.USER.PROFILE(userId)}${queryString}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
 };
 
 // Report API service

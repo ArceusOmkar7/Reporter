@@ -25,35 +25,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, MoreHorizontal, Edit, UserCog } from "lucide-react";
+import { Loader2, MoreHorizontal, UserCog, Trash2, Edit } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function UserManagement() {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserProfileResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    userID: 0,
-    username: "",
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    email: "",
-    contactNumber: "",
-    role: "",
-  });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserProfileResponse | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -80,9 +73,7 @@ export function UserManagement() {
 
       // Update the local state with the new role
       setUsers(
-        users.map((user) =>
-          user.userID === userId ? { ...user, role: newRole } : user
-        )
+        users.map((u) => (u.userID === userId ? { ...u, role: newRole } : u))
       );
 
       toast.success("User role updated successfully");
@@ -98,99 +89,34 @@ export function UserManagement() {
     }
   };
 
-  const openEditDialog = (user: UserProfileResponse) => {
-    setFormData({
-      userID: user.userID,
-      username: user.username,
-      firstName: user.firstName,
-      middleName: user.middleName || "",
-      lastName: user.lastName,
-      email: user.email,
-      contactNumber: user.contactNumber,
-      role: user.role,
-    });
-    setIsDialogOpen(true);
-  };
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
 
-  const handleEditUser = async () => {
+    // Prevent admin from deleting themselves
+    if (userToDelete.userID === user?.id) {
+      toast.error("You cannot delete your own account.");
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      return;
+    }
+
     try {
       setLoading(true);
-      // Validate required fields
-      if (
-        !formData.firstName ||
-        !formData.lastName ||
-        !formData.email ||
-        !formData.contactNumber ||
-        !formData.username
-      ) {
-        toast.error("Please fill all required fields");
-        return;
-      }
+      await UserAPI.delete(userToDelete.userID, user?.id);
 
-      // Find the original user data
-      const originalUser = users.find(u => u.userID === formData.userID);
-      if (!originalUser) {
-        toast.error("User not found");
-        return;
-      }
-
-      // Only include fields that have changed
-      const updatedProfile: Partial<UserProfileResponse> = {};
-      
-      if (formData.username !== originalUser.username) {
-        updatedProfile.username = formData.username;
-      }
-      if (formData.firstName !== originalUser.firstName) {
-        updatedProfile.firstName = formData.firstName;
-      }
-      if (formData.lastName !== originalUser.lastName) {
-        updatedProfile.lastName = formData.lastName;
-      }
-      if (formData.middleName !== originalUser.middleName) {
-        updatedProfile.middleName = formData.middleName || null;
-      }
-      if (formData.email !== originalUser.email) {
-        updatedProfile.email = formData.email;
-      }
-      if (formData.contactNumber !== originalUser.contactNumber) {
-        updatedProfile.contactNumber = formData.contactNumber;
-      }
-      if (formData.role !== originalUser.role) {
-        updatedProfile.role = formData.role;
-      }
-
-      // If no fields have changed, show a message and return
-      if (Object.keys(updatedProfile).length === 0) {
-        toast.info("No changes to save");
-        setIsDialogOpen(false);
-        return;
-      }
-
-      console.log("Sending profile update:", updatedProfile);
-
-      // Update user profile
-      await UserAPI.updateProfile(formData.userID, updatedProfile, user?.id);
-
-      // Update local state
-      setUsers(
-        users.map((u) =>
-          u.userID === formData.userID
-            ? {
-                ...u,
-                ...updatedProfile,
-              }
-            : u
-        )
-      );
-
-      toast.success("User details updated successfully");
-      setIsDialogOpen(false);
+      setUsers(users.filter((u) => u.userID !== userToDelete.userID));
+      toast.success(`User ${userToDelete.username} deleted successfully.`);
     } catch (error) {
-      console.error("Error updating user details:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to update user details: ${errorMessage}`);
+      console.error("Error deleting user:", error);
+      toast.error(
+        `Failed to delete user: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setLoading(false);
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -256,17 +182,12 @@ export function UserManagement() {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem
                         className="cursor-pointer"
-                        onClick={() => openEditDialog(user)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="cursor-pointer"
                         onClick={() =>
                           handleRoleChange(
                             user.userID,
-                            user.role === "Administrator" ? "Regular" : "Administrator"
+                            user.role === "Administrator"
+                              ? "Regular"
+                              : "Administrator"
                           )
                         }
                       >
@@ -274,6 +195,16 @@ export function UserManagement() {
                         {user.role === "Administrator"
                           ? "Set as Regular"
                           : "Set as Administrator"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer text-red-600 hover:!text-red-600 hover:!bg-red-100 dark:hover:!bg-red-700/50 dark:hover:!text-red-50"
+                        onClick={() => {
+                          setUserToDelete(user);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete User
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -284,126 +215,34 @@ export function UserManagement() {
         </Table>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit User Details</DialogTitle>
-            <DialogDescription>
-              Make changes to the user's details here. Click save when you're
-              done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
-                Username
-              </Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="firstName" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) =>
-                  setFormData({ ...formData, firstName: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="middleName" className="text-right">
-                Middle Name
-              </Label>
-              <Input
-                id="middleName"
-                value={formData.middleName}
-                onChange={(e) =>
-                  setFormData({ ...formData, middleName: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="Optional"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lastName" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) =>
-                  setFormData({ ...formData, lastName: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contactNumber" className="text-right">
-                Contact Number
-              </Label>
-              <Input
-                id="contactNumber"
-                value={formData.contactNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactNumber: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Role
-              </Label>
-              <select
-                id="role"
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
-                }
-                className="col-span-3 p-2 border rounded-md"
+      {/* Delete Confirmation Dialog */}
+      {userToDelete && (
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                user account for "{userToDelete.username}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setUserToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteUser}
+                className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
               >
-                <option value="Regular">Regular</option>
-                <option value="Administrator">Administrator</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={handleEditUser} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
