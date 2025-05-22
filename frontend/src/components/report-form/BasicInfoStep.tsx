@@ -48,7 +48,7 @@ export function BasicInfoStep({
     <div className="space-y-6">
       <div className="grid gap-2">
         <Label htmlFor="title" className="text-foreground">
-          Petition Title
+          Report Title
         </Label>
         <Input
           id="title"
@@ -66,7 +66,7 @@ export function BasicInfoStep({
 
       <div className="grid gap-2">
         <Label htmlFor="description" className="text-foreground">
-          Petition Description
+          Report Description
         </Label>
         <Textarea
           id="description"
@@ -113,7 +113,7 @@ export function BasicInfoStep({
           </SelectContent>
         </Select>
         <p className="text-sm text-muted-foreground">
-          Choose the most relevant category for your petition
+          Choose the most relevant category for your report
         </p>
       </div>
     </div>

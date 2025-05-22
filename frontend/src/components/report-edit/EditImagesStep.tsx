@@ -274,12 +274,17 @@ export function EditImagesStep({
       {!newImages.length && !displayedExistingImages.length && (
         <p className="text-gray-400 mt-4">
           No images selected. Images are optional but help illustrate your
-          petition.
+          report.
         </p>
       )}
 
+      <p className="text-sm text-muted-foreground">
+        Successfully uploaded images will be displayed here. You can remove
+        images or add more before submitting the report.
+      </p>
+
       <div className="mt-8 space-y-4 border-t border-gray-800 pt-6">
-        <h3 className="font-medium">Petition Summary</h3>
+        <h3 className="font-medium">Report Summary</h3>
 
         <div>
           <h4 className="text-sm font-medium text-gray-400">Title</h4>

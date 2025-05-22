@@ -61,7 +61,7 @@ export function EditBasicInfoStep({
   return (
     <div className="space-y-6">
       <div className="grid gap-2">
-        <Label htmlFor="title">Petition Title</Label>
+        <Label htmlFor="title">Report Title</Label>
         <Input
           id="title"
           name="title"
@@ -72,7 +72,7 @@ export function EditBasicInfoStep({
           className="bg-transparent border-gray-700"
         />
         <p className="text-xs text-gray-400">
-          A concise title helps others understand your petition at a glance.
+          A concise title helps others understand your report at a glance.
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export function EditBasicInfoStep({
           </SelectContent>
         </Select>
         <p className="text-xs text-gray-400">
-          Choose the category that best fits your petition.
+          Choose the category that best fits your report.
         </p>
       </div>
     </div>
