@@ -30,13 +30,16 @@ const Index = () => {
         const response = await ReportAPI.search(); // Changed variable name to response
         // Get random subset of reports (up to 3)
         // Access the .reports property from the response
-        const fetchedReports = response.reports.sort(() => 0.5 - Math.random()).slice(0, 3); // Renamed to fetchedReports
+        const fetchedReports = response.reports
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3); // Renamed to fetchedReports
         setReports(fetchedReports); // Use fetchedReports
 
         // Fetch user votes for these reports
         if (user?.id) {
           const votes: Record<number, "upvote" | "downvote" | null> = {};
-          for (const report of fetchedReports) { // Use fetchedReports
+          for (const report of fetchedReports) {
+            // Use fetchedReports
             try {
               const response = await VoteAPI.getVoteCounts(
                 report.reportID,
@@ -222,7 +225,7 @@ const Index = () => {
   });
   const { theme } = useTheme();
   return (
-    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-sky-100 via-blue-200 to-indigo-300 dark:from-slate-900 dark:to-sky-950 text-gray-900 dark:text-white">
       <Header /> {/* Floating Theme Toggle */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="p-2 dark:bg-gray-800/80 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border dark:border-gray-700 border-gray-200 transition-all hover:scale-110 hover:shadow-xl animate-pulse-slow">
