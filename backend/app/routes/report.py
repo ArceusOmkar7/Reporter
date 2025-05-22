@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional, cast
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends, Request, Query, status
 from datetime import datetime
+import math
 
 router = APIRouter()
 
@@ -45,6 +46,13 @@ class ReportListItem(BaseModel):
     createdAt: str
 
 
+class PaginatedReportListResponse(BaseModel):
+    reports: List[ReportListItem]
+    totalPages: int
+    currentPage: int
+    totalReports: int
+
+
 class ReportDetail(ReportBase):
     categoryName: Optional[str] = None
     street: Optional[str] = None
@@ -79,7 +87,7 @@ class ReportResponse(BaseResponse):
     id: int = Field(..., description="Report ID")
 
 
-@router.get("/search", response_model=List[ReportListItem], summary="Search Reports")
+@router.get("/search", response_model=PaginatedReportListResponse, summary="Search Reports")
 async def search_reports(
     query: Optional[str] = Query(
         None, description="Search term for title or description"),
@@ -90,72 +98,132 @@ async def search_reports(
     dateFrom: Optional[str] = Query(
         None, description="Filter by start date (YYYY-MM-DD)"),
     dateTo: Optional[str] = Query(
-        None, description="Filter by end date (YYYY-MM-DD)")
+        None, description="Filter by end date (YYYY-MM-DD)"),
+    page: int = Query(1, ge=1, description="Page number for pagination"),
+    limit: int = Query(
+        10, ge=1, le=100, description="Number of items per page"),
+    sortBy: Optional[str] = Query(
+        "createdAt_desc", description="Sort order (e.g., createdAt_desc, createdAt_asc, upvotes_desc, upvotes_asc)")
 ):
     """
-    Search reports with filters
+    Search reports with filters, pagination, and sorting
 
-    Returns a list of reports matching the specified filters.
+    Returns a paginated list of reports matching the specified filters and sort order.
     This endpoint does not require authentication.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        sql = """
-            SELECT r.*, c.categoryName, l.street, l.city, l.state, 
-            u.username, COUNT(DISTINCT i.imageID) as imageCount,
-            SUM(CASE WHEN v.voteType = 'upvote' THEN 1 ELSE 0 END) as upvotes,
-            SUM(CASE WHEN v.voteType = 'downvote' THEN 1 ELSE 0 END) as downvotes
-            FROM reports r
-            LEFT JOIN categories c ON r.categoryID = c.categoryID
-            LEFT JOIN locations l ON r.locationID = l.locationID
-            LEFT JOIN users u ON r.userID = u.userID
-            LEFT JOIN images i ON r.reportID = i.reportID
-            LEFT JOIN votes v ON r.reportID = v.reportID
-            WHERE 1=1
-        """
+        # Base SQL for filters
+        filter_sql_parts = []
         params = []
 
         if query:
-            sql += " AND (r.title LIKE %s OR r.description LIKE %s)"
+            filter_sql_parts.append(
+                "(r.title LIKE %s OR r.description LIKE %s)")
             params.extend([f'%{query}%', f'%{query}%'])
 
         if category:
-            sql += " AND c.categoryName = %s"
+            filter_sql_parts.append("c.categoryName = %s")
             params.append(category)
 
         if location:
-            sql += " AND (l.street LIKE %s OR l.city LIKE %s OR l.state LIKE %s OR l.country LIKE %s)"
+            filter_sql_parts.append(
+                "(l.street LIKE %s OR l.city LIKE %s OR l.state LIKE %s OR l.country LIKE %s)")
             params.extend([f'%{location}%', f'%{location}%',
                           f'%{location}%', f'%{location}%'])
 
         if dateFrom:
-            sql += " AND r.createdAt >= %s"
+            filter_sql_parts.append("r.createdAt >= %s")
             params.append(dateFrom)
 
         if dateTo:
-            sql += " AND r.createdAt <= %s"
+            filter_sql_parts.append("r.createdAt <= %s")
             params.append(dateTo)
 
-        sql += " GROUP BY r.reportID"
+        where_clause = " AND ".join(
+            filter_sql_parts) if filter_sql_parts else "1=1"
 
-        cursor.execute(sql, params)
-        reports = cursor.fetchall()
+        # Count total matching reports for pagination
+        count_sql = f"""
+            SELECT COUNT(DISTINCT r.reportID) as totalRecords
+            FROM reports r
+            LEFT JOIN categories c ON r.categoryID = c.categoryID
+            LEFT JOIN locations l ON r.locationID = l.locationID
+            LEFT JOIN users u ON r.userID = u.userID
+            WHERE {where_clause}
+        """
+        cursor.execute(count_sql, params)
+        total_records_result = cursor.fetchone()
+        total_records = total_records_result['totalRecords'] if total_records_result else 0
+
+        total_pages = math.ceil(
+            total_records / limit) if total_records > 0 else 1
+
+        # Determine ORDER BY clause
+        order_by_clause = "ORDER BY r.createdAt DESC"  # Default sort
+        if sortBy == "createdAt_asc":
+            order_by_clause = "ORDER BY r.createdAt ASC"
+        elif sortBy == "upvotes_desc":
+            # Secondary sort for tie-breaking
+            order_by_clause = "ORDER BY upvotes DESC, r.createdAt DESC"
+        elif sortBy == "upvotes_asc":
+            # Secondary sort for tie-breaking
+            order_by_clause = "ORDER BY upvotes ASC, r.createdAt ASC"
+
+        # Main query for fetching reports with pagination and sorting
+        offset = (page - 1) * limit
+
+        sql = f"""
+            SELECT r.reportID, r.title, r.description, r.createdAt, r.updatedAt,
+                   c.categoryName, l.street, l.city, l.state, 
+                   u.username, 
+                   (SELECT COUNT(DISTINCT i.imageID) FROM images i WHERE i.reportID = r.reportID) as imageCount,
+                   COALESCE(SUM(CASE WHEN v.voteType = 'upvote' THEN 1 ELSE 0 END), 0) as upvotes,
+                   COALESCE(SUM(CASE WHEN v.voteType = 'downvote' THEN 1 ELSE 0 END), 0) as downvotes
+            FROM reports r
+            LEFT JOIN categories c ON r.categoryID = c.categoryID
+            LEFT JOIN locations l ON r.locationID = l.locationID
+            LEFT JOIN users u ON r.userID = u.userID
+            LEFT JOIN votes v ON r.reportID = v.reportID
+            WHERE {where_clause}
+            GROUP BY r.reportID, r.title, r.description, r.createdAt, r.updatedAt, c.categoryName, l.street, l.city, l.state, u.username
+            {order_by_clause}
+            LIMIT %s OFFSET %s
+        """
+
+        final_params = params + [limit, offset]
+        cursor.execute(sql, final_params)
+        reports_data = cursor.fetchall()
 
         # Convert datetime objects to strings
-        for report in reports:
-            if report and isinstance(report.get('createdAt'), datetime):
-                report['createdAt'] = report.get('createdAt').isoformat()
-            if report and isinstance(report.get('updatedAt'), datetime):
-                report['updatedAt'] = report.get('updatedAt').isoformat()
+        processed_reports = []
+        for report_row in reports_data:
+            report_dict = dict(report_row)
+            if report_dict.get('createdAt') and isinstance(report_dict['createdAt'], datetime):
+                report_dict['createdAt'] = report_dict['createdAt'].isoformat()
+            if report_dict.get('updatedAt') and isinstance(report_dict.get('updatedAt'), datetime):
+                report_dict['updatedAt'] = report_dict['updatedAt'].isoformat()
+            processed_reports.append(ReportListItem(**report_dict))
 
-        return reports
+        return PaginatedReportListResponse(
+            reports=processed_reports,
+            totalPages=total_pages,
+            currentPage=page,
+            totalReports=total_records
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        print(f"Error in search_reports: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=500, detail=f"An unexpected error occurred: {str(e)}")
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 @router.get("/{report_id}/details", response_model=ReportDetail, summary="Get Report Details")
@@ -353,13 +421,13 @@ async def delete_report(report_id: int, user_id: int = Depends(get_user_id)):
         # Delete related records first
         # Delete votes
         cursor.execute("DELETE FROM votes WHERE reportID = %s", (report_id,))
-        
+
         # Delete images
         cursor.execute("DELETE FROM images WHERE reportID = %s", (report_id,))
-        
+
         # Finally delete the report
         cursor.execute("DELETE FROM reports WHERE reportID = %s", (report_id,))
-        
+
         conn.commit()
         return {"message": "Report deleted successfully"}
     except Exception as e:

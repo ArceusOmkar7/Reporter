@@ -16,7 +16,17 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ThumbsUp, ThumbsDown, Calendar, MapPin } from "lucide-react";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Calendar,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowUpDown,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -28,15 +38,18 @@ const BrowseReports = () => {
     location: "",
     dateFrom: "",
     dateTo: "",
+    sortBy: "createdAt_desc",
+    page: 1,
   });
+  const [itemsPerPage] = useState(10);
+
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch reports based on search parameters
   const {
-    data: reports,
+    data: reportsData,
     isLoading: isLoadingReports,
     error: reportsError,
   } = useQuery({
@@ -44,15 +57,15 @@ const BrowseReports = () => {
     queryFn: async () => {
       console.log("Fetching reports with params:", searchParams);
       try {
-        // Don't send "all" as a category to the API, leave it as empty string
         const apiParams = {
           ...searchParams,
           category:
             searchParams.category === "all" ? "" : searchParams.category,
+          limit: itemsPerPage,
         };
 
         const data = await ReportAPI.search(apiParams);
-        console.log("Received reports:", data);
+        console.log("Received reports data:", data);
         return data;
       } catch (error) {
         console.error("Error fetching reports:", error);
@@ -61,7 +74,10 @@ const BrowseReports = () => {
     },
   });
 
-  // Fetch categories for the filter dropdown
+  const reports = reportsData?.reports;
+  const totalPages = reportsData?.totalPages || 1;
+  const currentPage = reportsData?.currentPage || 1;
+
   const { data: categories, isLoading: isLoadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -77,7 +93,6 @@ const BrowseReports = () => {
     },
   });
 
-  // Fetch votes for user
   const { data: userVotes = {} } = useQuery({
     queryKey: [
       "userVotes",
@@ -98,7 +113,6 @@ const BrowseReports = () => {
           );
           console.log(`Vote response for report ${report.reportID}:`, response);
 
-          // Normalize vote type to lowercase to handle case sensitivity issues
           if (response.userVote) {
             const voteType = response.userVote.toLowerCase();
             console.log(`Normalized vote type: ${voteType}`);
@@ -131,7 +145,6 @@ const BrowseReports = () => {
     refetchOnMount: true,
   });
 
-  // Vote mutation
   const voteMutation = useMutation({
     mutationFn: async ({
       reportId,
@@ -149,17 +162,14 @@ const BrowseReports = () => {
       }
     },
     onMutate: async ({ reportId, voteType, isRemoving }) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["userVotes"] });
 
-      // Snapshot the previous value
       const previousVotes = queryClient.getQueryData([
         "userVotes",
         user?.id,
         reports?.map((r) => r.reportID).join(","),
       ]);
 
-      // Optimistically update to the new value
       queryClient.setQueryData(
         ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
         (old: Record<number, string> = {}) => {
@@ -178,14 +188,11 @@ const BrowseReports = () => {
     },
     onSuccess: (_, variables) => {
       console.log("Vote mutation succeeded:", variables);
-      // Force refetch the votes data
       queryClient.invalidateQueries({ queryKey: ["userVotes"] });
-      // Also refetch report data to update counts
       queryClient.invalidateQueries({ queryKey: ["reports"] });
     },
     onError: (error, variables, context) => {
       console.error("Vote mutation error:", error);
-      // Roll back to the previous state if there's an error
       if (context?.previousVotes) {
         queryClient.setQueryData(
           ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
@@ -199,33 +206,41 @@ const BrowseReports = () => {
       });
     },
     onSettled: () => {
-      // Always refetch after error or success to make sure our local data is correct
       queryClient.invalidateQueries({ queryKey: ["userVotes"] });
     },
   });
 
   useEffect(() => {
     console.log("Component state:", {
-      reports,
+      reportsData,
       isLoadingReports,
       reportsError,
       categories,
     });
-  }, [reports, isLoadingReports, reportsError, categories]);
+  }, [reportsData, isLoadingReports, reportsError, categories]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchParams((prev) => ({ ...prev, query: e.target.value }));
+    setSearchParams((prev) => ({ ...prev, query: e.target.value, page: 1 }));
   };
 
   const handleCategoryChange = (value: string) => {
-    setSearchParams((prev) => ({ ...prev, category: value }));
+    setSearchParams((prev) => ({ ...prev, category: value, page: 1 }));
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchParams((prev) => ({ ...prev, location: e.target.value }));
+    setSearchParams((prev) => ({ ...prev, location: e.target.value, page: 1 }));
   };
 
-  // Function to clear all filters
+  const handleSortChange = (value: string) => {
+    setSearchParams((prev) => ({ ...prev, sortBy: value, page: 1 }));
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setSearchParams((prev) => ({ ...prev, page: newPage }));
+    }
+  };
+
   const clearFilters = () => {
     setSearchParams({
       query: "",
@@ -233,10 +248,11 @@ const BrowseReports = () => {
       location: "",
       dateFrom: "",
       dateTo: "",
+      sortBy: "createdAt_desc",
+      page: 1,
     });
   };
 
-  // Handle vote action
   const handleVote = async (
     e: React.MouseEvent,
     reportId: number,
@@ -262,7 +278,6 @@ const BrowseReports = () => {
       return;
     }
 
-    // Get current vote state - normalize any existing vote to lowercase
     const rawVote = userVotes?.[reportId];
     const currentVote = rawVote
       ? (rawVote.toLowerCase() as "upvote" | "downvote")
@@ -276,9 +291,7 @@ const BrowseReports = () => {
     });
 
     try {
-      // If already voted the same way, remove the vote
       if (currentVote === type) {
-        // We're removing a vote
         console.log(`Removing ${type} vote on report ${reportId}`);
 
         voteMutation.mutate({
@@ -287,7 +300,6 @@ const BrowseReports = () => {
           isRemoving: true,
         });
 
-        // Force immediate optimistic update via queryClient
         queryClient.setQueryData(
           ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
           (old: Record<number, string> = {}) => {
@@ -300,7 +312,6 @@ const BrowseReports = () => {
           description: "Your vote has been removed",
         });
       } else {
-        // We're adding or changing vote
         console.log(`Setting ${type} vote on report ${reportId}`);
 
         voteMutation.mutate({
@@ -308,7 +319,6 @@ const BrowseReports = () => {
           voteType: type,
         });
 
-        // Force immediate optimistic update via queryClient
         queryClient.setQueryData(
           ["userVotes", user?.id, reports?.map((r) => r.reportID).join(",")],
           (old: Record<number, string> = {}) => {
@@ -345,7 +355,6 @@ const BrowseReports = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Filters sidebar */}
           <div className="space-y-6 col-span-1 md:sticky md:top-24 h-fit">
             <div>
               <h3 className="text-lg font-medium mb-3">Search</h3>
@@ -355,6 +364,24 @@ const BrowseReports = () => {
                 onChange={handleSearchChange}
                 className="dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-300 focus:border-blue-500 dark:focus:border-blue-500"
               />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Sort By</h3>
+              <Select
+                value={searchParams.sortBy}
+                onValueChange={handleSortChange}
+              >
+                <SelectTrigger className="dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-300 focus:border-blue-500 dark:focus:border-blue-500">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-300">
+                  <SelectItem value="createdAt_desc">Newest First</SelectItem>
+                  <SelectItem value="createdAt_asc">Oldest First</SelectItem>
+                  <SelectItem value="upvotes_desc">Most Popular</SelectItem>
+                  <SelectItem value="upvotes_asc">Least Popular</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -411,11 +438,10 @@ const BrowseReports = () => {
             </div>
           </div>
 
-          {/* Reports grid */}
           <div className="col-span-1 md:col-span-3">
             {isLoadingReports ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
+                {[...Array(itemsPerPage)].map((_, i) => (
                   <Card
                     key={i}
                     className="dark:bg-gray-800/60 bg-gray-100/80 dark:border-gray-700 border-gray-200"
@@ -455,7 +481,6 @@ const BrowseReports = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {reports?.map((report: ReportListItem) => {
-                  // Get vote status from state, ensuring correct string comparison
                   const currentVote = userVotes?.[report.reportID];
                   const hasUpvote = currentVote === "upvote";
                   const hasDownvote = currentVote === "downvote";
@@ -553,6 +578,49 @@ const BrowseReports = () => {
                     </Card>
                   );
                 })}
+              </div>
+            )}
+            {reports && reports.length > 0 && totalPages > 1 && (
+              <div className="flex items-center justify-center space-x-2 mt-8">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  className="dark:hover:bg-gray-700 hover:bg-gray-200"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="dark:hover:bg-gray-700 hover:bg-gray-200"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm dark:text-gray-300 text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="dark:hover:bg-gray-700 hover:bg-gray-200"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="dark:hover:bg-gray-700 hover:bg-gray-200"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>

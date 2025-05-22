@@ -203,11 +203,23 @@ export const ReportAPI = {
     location?: string;
     dateFrom?: string;
     dateTo?: string;
-  }): Promise<ReportListItem[]> => {
+    sortBy?: string; // Added sortBy
+    page?: number; // Added page
+    limit?: number; // Added limit
+  }): Promise<{
+    reports: ReportListItem[];
+    totalPages: number;
+    currentPage: number;
+    totalReports: number; // Added totalReports
+  }> => {
+    // Updated return type
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value) searchParams.append(key, value);
+        if (value !== undefined && value !== null && value !== "") {
+          // Ensure value is not empty or undefined
+          searchParams.append(key, String(value)); // Convert value to string
+        }
       });
     }
 
@@ -217,14 +229,33 @@ export const ReportAPI = {
     console.log(`Searching reports with query string: ${queryString}`);
 
     try {
-      const data = await apiRequest<ReportListItem[]>(
-        `${API_ENDPOINTS.REPORT.SEARCH}${queryString}`
-      );
-      console.log("Received reports data:", data);
-      return Array.isArray(data) ? data : [];
+      // Expect the API to return an object with reports, totalPages, currentPage, and totalReports
+      const data = await apiRequest<{
+        reports: ReportListItem[];
+        totalPages: number;
+        currentPage: number;
+        totalReports: number; // Added totalReports
+      }>(`${API_ENDPOINTS.REPORT.SEARCH}${queryString}`);
+      console.log("Received reports data from API:", data);
+
+      // Ensure the response structure is as expected
+      if (
+        data &&
+        Array.isArray(data.reports) &&
+        typeof data.totalPages === "number" &&
+        typeof data.currentPage === "number" &&
+        typeof data.totalReports === "number" // Added check for totalReports
+      ) {
+        return data;
+      } else {
+        // If the structure is not as expected, return a default/empty paginated structure
+        console.warn("Unexpected API response structure for paginated reports");
+        return { reports: [], totalPages: 1, currentPage: 1, totalReports: 0 }; // Added totalReports
+      }
     } catch (error) {
       console.error("Report search failed:", error);
-      throw error;
+      // On error, return a default/empty paginated structure to prevent crashes
+      return { reports: [], totalPages: 1, currentPage: 1, totalReports: 0 }; // Added totalReports
     }
   },
 
