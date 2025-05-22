@@ -62,7 +62,7 @@ export const ReportCard = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900/30 rounded-lg overflow-hidden hover:bg-gray-900/40">
+    <div className="flex flex-col h-full dark:bg-gray-900/30 bg-gray-100/80 rounded-lg overflow-hidden hover:dark:bg-gray-900/40 hover:bg-gray-200/70 border dark:border-gray-700/60 border-gray-200">
       <div className="overflow-hidden mb-4 h-48">
         {image ? (
           <ImageWithFallback
@@ -73,9 +73,9 @@ export const ReportCard = ({
             isHomePage={isHomePage}
           />
         ) : (
-          <div className="image-placeholder h-full w-full bg-gray-800/50 flex items-center justify-center">
+          <div className="image-placeholder h-full w-full dark:bg-gray-800/50 bg-gray-300/50 flex items-center justify-center">
             <svg
-              className="h-12 w-12 text-gray-400"
+              className="h-12 w-12 dark:text-gray-400 text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -92,66 +92,82 @@ export const ReportCard = ({
       </div>
 
       <div className="p-4 flex-1 flex flex-col">
-        <div className="flex justify-between text-xs text-gray-500 mb-1">
+        <div className="flex justify-between text-xs dark:text-gray-500 text-gray-400 mb-1">
           <span className="capitalize">{category}</span>
           <span>{date}</span>
         </div>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-gray-400 mb-2 line-clamp-2">{description}</p>
-        <p className="text-xs text-gray-500 mb-4">Location: {location}</p>
-        <div className="mt-auto flex items-center justify-around">
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  normalizedVote === "upvote"
-                    ? "text-green-500"
-                    : "text-gray-400"
-                }`}
-                onClick={(e) => handleVote(e, "upvote")}
-              >
-                <ThumbsUp
-                  size={20}
-                  className={
-                    normalizedVote === "upvote" ? "fill-green-500" : ""
-                  }
-                />
-              </Button>
-              <div className="text-center mt-1">
-                <span className="text-sm font-semibold text-green-400">
-                  {upvotes}
-                </span>
-                <span className="block text-xs text-gray-500">Upvotes</span>
-              </div>
-            </div>
-            <div className="flex flex-col items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`p-2 h-auto hover:bg-gray-800/50 rounded-full ${
-                  normalizedVote === "downvote"
-                    ? "text-red-500"
-                    : "text-gray-400"
-                }`}
-                onClick={(e) => handleVote(e, "downvote")}
-              >
-                <ThumbsDown
-                  size={20}
-                  className={
-                    normalizedVote === "downvote" ? "fill-red-500" : ""
-                  }
-                />
-              </Button>
-              <div className="text-center mt-1">
-                <span className="text-sm font-semibold text-red-400">
-                  {downvotes}
-                </span>
-                <span className="block text-xs text-gray-500">Downvotes</span>
-              </div>
-            </div>
+        <h3 className="text-lg font-semibold mb-2 dark:text-gray-100 text-gray-900">
+          {title}
+        </h3>
+        <p className="text-sm dark:text-gray-400 text-gray-600 mb-2 line-clamp-2">
+          {description}
+        </p>
+        <p className="text-xs dark:text-gray-500 text-gray-400 mb-4">
+          Location: {location}
+        </p>
+
+        {/* Votes and Details Button */}
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {onVote && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => handleVote(e, "upvote")}
+                  className={`p-1 h-auto dark:text-gray-400 text-gray-600 hover:dark:text-green-400 hover:text-green-500 ${
+                    normalizedVote === "upvote"
+                      ? "dark:text-green-400 text-green-500"
+                      : ""
+                  }`}
+                >
+                  <ThumbsUp size={16} />
+                  <span className="ml-1 text-xs">{upvotes}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => handleVote(e, "downvote")}
+                  className={`p-1 h-auto dark:text-gray-400 text-gray-600 hover:dark:text-red-400 hover:text-red-500 ${
+                    normalizedVote === "downvote"
+                      ? "dark:text-red-400 text-red-500"
+                      : ""
+                  }`}
+                >
+                  <ThumbsDown size={16} />
+                  <span className="ml-1 text-xs">{downvotes}</span>
+                </Button>
+              </>
+            )}
+            {votes !== undefined && !onVote && (
+              <span className="text-xs dark:text-gray-400 text-gray-600">
+                {votes} Votes
+              </span>
+            )}
           </div>
+
+          {showDetailsButton && (
+            <Link to={`/reports/${id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="dark:border-gray-700 border-gray-300 dark:text-gray-300 text-gray-700 dark:hover:bg-gray-700 hover:bg-gray-200"
+              >
+                <Eye size={14} className="mr-1" />
+                Details
+              </Button>
+            </Link>
+          )}
+          {showOnlyButton && onShowOnly && (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={handleShowOnly}
+              className="text-xs dark:text-blue-400 text-blue-600 hover:dark:text-blue-300 hover:text-blue-700 p-0 h-auto"
+            >
+              Show only {category}
+            </Button>
+          )}
         </div>
       </div>
     </div>

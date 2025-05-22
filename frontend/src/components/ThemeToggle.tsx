@@ -32,7 +32,7 @@ export function ThemeToggle({
             variant={variant}
             size={size}
             onClick={toggleTheme}
-            className="rounded-full"
+            className="rounded-full dark:text-gray-100 text-gray-900 dark:hover:bg-gray-800 hover:bg-gray-100 dark:border-gray-700 border-gray-300"
           >
             {theme === "dark" ? (
               <Sun className="h-[1.2rem] w-[1.2rem] transition-all" />
@@ -42,7 +42,7 @@ export function ThemeToggle({
             <span className="sr-only">Toggle theme</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent className="dark:bg-gray-800 bg-white dark:text-gray-100 text-gray-900 dark:border-gray-700 border-gray-300">
           <p>Toggle theme</p>
         </TooltipContent>
       </Tooltip>

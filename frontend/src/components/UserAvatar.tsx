@@ -28,7 +28,7 @@ export function UserAvatar({
 
   return (
     <div
-      className={`rounded-full flex items-center justify-center font-bold bg-gray-700 text-white border-2 border-primary ${sizeClasses[size]} ${className}`}
+      className={`rounded-full flex items-center justify-center font-bold dark:bg-gray-700 bg-gray-300 dark:text-white text-gray-800 border-2 dark:border-primary border-primary-light ${sizeClasses[size]} ${className}`}
     >
       {getInitials()}
     </div>

@@ -64,10 +64,10 @@ export const ImageWithFallback = ({
   }
 
   return error ? (
-    <div className="flex items-center justify-center w-full h-48 bg-gray-800 rounded-md">
-      <div className="text-gray-500">
+    <div className="flex items-center justify-center w-full h-48 dark:bg-gray-800 bg-gray-200 rounded-md">
+      <div className="text-center dark:text-gray-500 text-gray-400">
         <svg
-          className="h-12 w-12 mx-auto"
+          className="h-12 w-12 mx-auto dark:text-gray-600 text-gray-500"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

@@ -30,17 +30,17 @@ const EditReport = () => {
   // Display loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900">
         <Header />
         <main className="container px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            <Skeleton className="h-12 w-1/2 mb-6 bg-gray-800" />
-            <Card className="bg-gray-900 border-gray-800">
+            <Skeleton className="h-12 w-1/2 mb-6 dark:bg-gray-800 bg-gray-300" />
+            <Card className="dark:bg-gray-800/60 bg-gray-100/80 dark:border-gray-700 border-gray-200">
               <CardHeader>
-                <Skeleton className="h-8 w-1/3 bg-gray-800" />
+                <Skeleton className="h-8 w-1/3 dark:bg-gray-700 bg-gray-300" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-64 w-full bg-gray-800" />
+                <Skeleton className="h-64 w-full dark:bg-gray-700 bg-gray-300" />
               </CardContent>
             </Card>
           </div>
@@ -52,19 +52,22 @@ const EditReport = () => {
   // Display error state
   if (error || !report) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
+      <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
         <Header />
         <main className="flex-1 container px-4 py-8 flex items-center justify-center">
-          <div className="text-center">
-            <AlertTriangle size={64} className="mx-auto text-red-500 mb-4" />
+          <div className="text-center p-8 dark:bg-gray-800/50 bg-white/70 shadow-xl rounded-lg">
+            <AlertTriangle
+              size={64}
+              className="mx-auto dark:text-red-500 text-red-600 mb-4"
+            />
             <h1 className="text-2xl font-bold mb-2">Report Not Found</h1>
-            <p className="text-gray-400 mb-6">
+            <p className="dark:text-gray-400 text-gray-500 mb-6">
               The report you're trying to edit doesn't exist or has been
               removed.
             </p>
             <Button
               onClick={() => navigate("/browse")}
-              className="bg-white text-black hover:bg-gray-200"
+              className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               Browse Reports
             </Button>
@@ -80,18 +83,21 @@ const EditReport = () => {
 
   if (!isOwner && !isAdmin) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
+      <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
         <Header />
         <main className="flex-1 container px-4 py-8 flex items-center justify-center">
-          <div className="text-center">
-            <AlertTriangle size={64} className="mx-auto text-red-500 mb-4" />
+          <div className="text-center p-8 dark:bg-gray-800/50 bg-white/70 shadow-xl rounded-lg">
+            <AlertTriangle
+              size={64}
+              className="mx-auto dark:text-red-500 text-red-600 mb-4"
+            />
             <h1 className="text-2xl font-bold mb-2">Not Authorized</h1>
-            <p className="text-gray-400 mb-6">
+            <p className="dark:text-gray-400 text-gray-500 mb-6">
               You don't have permission to edit this report.
             </p>
             <Button
               onClick={() => navigate(`/reports/${reportId}`)}
-              className="bg-white text-black hover:bg-gray-200"
+              className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               Back to Report
             </Button>
@@ -102,7 +108,7 @@ const EditReport = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900">
       <Header />
       <main className="container px-4 py-8">
         <div className="max-w-4xl mx-auto">

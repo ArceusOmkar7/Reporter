@@ -221,25 +221,25 @@ const ReportDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
+      <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
         <Header />
         <main className="flex-1 container px-4 py-8">
-          <Skeleton className="h-10 w-3/4 mb-6 bg-gray-800" />
+          <Skeleton className="h-10 w-3/4 mb-6 dark:bg-gray-800 bg-gray-300" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="col-span-1 lg:col-span-2">
-              <Card className="bg-gray-900/30 border-gray-800 p-6 mb-8">
-                <Skeleton className="h-6 w-1/2 mb-4 bg-gray-800" />
-                <Skeleton className="h-4 w-full mb-3 bg-gray-800" />
-                <Skeleton className="h-4 w-full mb-3 bg-gray-800" />
-                <Skeleton className="h-4 w-full mb-3 bg-gray-800" />
-                <Skeleton className="h-4 w-3/4 bg-gray-800" />
+              <Card className="dark:bg-gray-800/60 bg-gray-100/80 dark:border-gray-700 border-gray-200 p-6 mb-8">
+                <Skeleton className="h-6 w-1/2 mb-4 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-4 w-full mb-3 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-4 w-full mb-3 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-4 w-full mb-3 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-4 w-3/4 dark:bg-gray-700 bg-gray-300" />
               </Card>
             </div>
             <div className="col-span-1">
-              <Card className="bg-gray-900/30 border-gray-800 p-6 mb-6">
-                <Skeleton className="h-6 w-3/4 mb-4 bg-gray-800" />
-                <Skeleton className="h-4 w-full mb-3 bg-gray-800" />
-                <Skeleton className="h-10 w-full mt-4 bg-gray-800" />
+              <Card className="dark:bg-gray-800/60 bg-gray-100/80 dark:border-gray-700 border-gray-200 p-6 mb-6">
+                <Skeleton className="h-6 w-3/4 mb-4 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-4 w-full mb-3 dark:bg-gray-700 bg-gray-300" />
+                <Skeleton className="h-10 w-full mt-4 dark:bg-gray-700 bg-gray-300" />
               </Card>
             </div>
           </div>
@@ -250,18 +250,21 @@ const ReportDetails = () => {
 
   if (error || !report) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
+      <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
         <Header />
         <main className="flex-1 container px-4 py-8 flex items-center justify-center">
           <div className="text-center">
-            <AlertTriangle size={64} className="mx-auto text-red-500 mb-4" />
+            <AlertTriangle
+              size={64}
+              className="mx-auto dark:text-red-500 text-red-600 mb-4"
+            />
             <h1 className="text-2xl font-bold mb-2">Report Not Found</h1>
-            <p className="text-gray-400 mb-6">
+            <p className="dark:text-gray-400 text-gray-500 mb-6">
               The report you're looking for doesn't exist or has been removed.
             </p>
             <Button
               onClick={() => navigate("/browse")}
-              className="bg-white text-black hover:bg-gray-200"
+              className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               Browse Reports
             </Button>
@@ -275,7 +278,7 @@ const ReportDetails = () => {
   const isOwner = user?.id === report.userID;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
       <Header />
       <main className="flex-1 container px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -285,7 +288,7 @@ const ReportDetails = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1 bg-transparent border-gray-700"
+                className="flex items-center gap-1 dark:bg-transparent bg-white dark:border-gray-600 border-gray-300 dark:hover:bg-gray-800 hover:bg-gray-100"
                 onClick={() => navigate(`/edit/${report.reportID}`)}
               >
                 <Edit size={16} />
@@ -294,7 +297,7 @@ const ReportDetails = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1 bg-transparent border-gray-700 hover:bg-red-900/20 hover:text-red-400"
+                className="flex items-center gap-1 dark:bg-transparent bg-white dark:border-gray-600 border-gray-300 dark:text-red-400 text-red-500 dark:hover:bg-red-900/20 hover:bg-red-500/10 hover:border-red-500/50 dark:hover:border-red-700"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
               >
@@ -307,19 +310,22 @@ const ReportDetails = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="col-span-1 lg:col-span-2">
-            <Card className="bg-gray-900/30 border-gray-800 p-6 mb-8">
-              <div className="flex flex-wrap items-center gap-3 mb-6">
+            <Card className="dark:bg-gray-800/60 bg-gray-50 dark:border-gray-700 border-gray-200 p-6 mb-8 shadow-sm">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6">
                 {report.categoryName && (
-                  <Badge className="bg-gray-800 hover:bg-gray-800 text-white">
+                  <Badge
+                    variant="secondary"
+                    className="dark:bg-gray-700 bg-gray-200 dark:text-gray-300 text-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                  >
                     {report.categoryName}
                   </Badge>
                 )}
-                <div className="flex items-center gap-1 text-gray-400 text-sm">
+                <div className="flex items-center gap-1 dark:text-gray-400 text-gray-500 text-sm">
                   <Calendar size={16} />
                   <span>{formattedDate}</span>
                 </div>
                 {report.username && (
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <div className="flex items-center gap-2 dark:text-gray-400 text-gray-500 text-sm">
                     {reportAuthor ? (
                       <UserAvatar
                         firstName={reportAuthor.firstName}
@@ -333,7 +339,7 @@ const ReportDetails = () => {
                   </div>
                 )}
                 {report.city && report.state && (
-                  <div className="flex items-center gap-1 text-gray-400 text-sm">
+                  <div className="flex items-center gap-1 dark:text-gray-400 text-gray-500 text-sm">
                     <MapPin size={16} />
                     <span>
                       {report.street}, {report.city}, {report.state}
@@ -342,8 +348,8 @@ const ReportDetails = () => {
                 )}
               </div>
 
-              <div className="prose prose-invert max-w-none">
-                <p className="text-gray-200 whitespace-pre-line">
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="dark:text-gray-200 text-gray-700 whitespace-pre-line">
                   {report.description}
                 </p>
               </div>
@@ -358,7 +364,7 @@ const ReportDetails = () => {
                     {report.images.map((image) => (
                       <div
                         key={image.imageID}
-                        className="rounded-md overflow-hidden"
+                        className="rounded-md overflow-hidden border dark:border-gray-700 border-gray-200"
                       >
                         <ImageWithFallback
                           src={image.imageURL}
@@ -374,9 +380,9 @@ const ReportDetails = () => {
           </div>
 
           <div className="col-span-1">
-            <Card className="bg-gray-900/30 border-gray-800 p-6 mb-6 sticky top-4">
+            <Card className="dark:bg-gray-800/60 bg-gray-50 dark:border-gray-700 border-gray-200 p-6 mb-6 sticky top-24 shadow-sm">
               <h3 className="text-xl font-medium mb-4">Support this report</h3>
-              <p className="text-gray-300 mb-6">
+              <p className="dark:text-gray-300 text-gray-600 mb-6">
                 Show your support by upvoting this report. Your vote matters!
               </p>
 
@@ -384,10 +390,10 @@ const ReportDetails = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className={`flex-1 flex items-center justify-center gap-2 ${
+                  className={`flex-1 flex items-center justify-center gap-2 dark:border-gray-600 border-gray-300 dark:hover:bg-gray-700/70 hover:bg-gray-100 ${
                     userVote === "upvote"
-                      ? "text-green-400 border-gray-700"
-                      : "bg-transparent border-gray-700"
+                      ? "dark:text-green-400 text-green-600 dark:border-green-500 border-green-500 dark:bg-green-900/20 bg-green-500/10"
+                      : "dark:text-gray-300 text-gray-700"
                   }`}
                   onClick={() => handleVote("upvote")}
                   disabled={voteMutation.isPending}
@@ -402,10 +408,10 @@ const ReportDetails = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className={`flex-1 flex items-center justify-center gap-2 ${
+                  className={`flex-1 flex items-center justify-center gap-2 dark:border-gray-600 border-gray-300 dark:hover:bg-gray-700/70 hover:bg-gray-100 ${
                     userVote === "downvote"
-                      ? "text-red-400 border-gray-700"
-                      : "bg-transparent border-gray-700"
+                      ? "dark:text-red-400 text-red-600 dark:border-red-500 border-red-500 dark:bg-red-900/20 bg-red-500/10"
+                      : "dark:text-gray-300 text-gray-700"
                   }`}
                   onClick={() => handleVote("downvote")}
                   disabled={voteMutation.isPending}
@@ -419,10 +425,10 @@ const ReportDetails = () => {
               </div>
             </Card>
 
-            <Card className="bg-gray-900/30 border-gray-800 p-6">
+            <Card className="dark:bg-gray-800/60 bg-gray-50 dark:border-gray-700 border-gray-200 p-6 shadow-sm">
               <h3 className="text-xl font-medium mb-4">Location</h3>
               {report.latitude && report.longitude ? (
-                <div className="rounded-md overflow-hidden h-64 bg-gray-800">
+                <div className="rounded-md overflow-hidden h-64 dark:bg-gray-700 bg-gray-200">
                   <iframe
                     title="Report location"
                     width="100%"
@@ -432,13 +438,13 @@ const ReportDetails = () => {
                   ></iframe>
                 </div>
               ) : (
-                <p className="text-gray-400">
+                <p className="dark:text-gray-400 text-gray-500">
                   No location coordinates available
                 </p>
               )}
 
               {report.street && (
-                <address className="text-gray-300 mt-4 not-italic">
+                <address className="dark:text-gray-300 text-gray-600 mt-4 not-italic">
                   {report.street}
                   <br />
                   {report.city}, {report.state}

@@ -20,7 +20,7 @@ import { Outlet } from "react-router-dom";
  */
 export const Layout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-950 text-white">
+    <div className="min-h-screen flex flex-col dark:bg-gray-950 bg-white dark:text-white text-gray-900">
       {/* Global navigation header */}
       <Header />
 
@@ -30,8 +30,8 @@ export const Layout: React.FC = () => {
       </main>
 
       {/* Footer with copyright */}
-      <footer className="border-t border-gray-800 py-6 mt-12">
-        <div className="container text-center text-sm text-gray-500">
+      <footer className="border-t dark:border-gray-800 border-gray-200 py-6 mt-12 dark:bg-gray-950 bg-white">
+        <div className="container text-center text-sm dark:text-gray-500 text-gray-400">
           © {new Date().getFullYear()} Reportr. All rights reserved.
         </div>
       </footer>

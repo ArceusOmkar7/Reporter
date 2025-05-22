@@ -96,13 +96,13 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
       {/* Global header navigation */}
       <Header />
 
       {/* Main content area */}
       <main className="flex-1 container max-w-md mx-auto px-4 py-10 flex items-center justify-center">
-        <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-8 w-full">
+        <div className="dark:bg-gray-800/60 bg-gray-50 dark:border dark:border-gray-700/60 border border-gray-200 rounded-lg p-8 w-full shadow-xl">
           <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
 
           {/* Login type selector */}
@@ -111,9 +111,9 @@ const SignIn = () => {
             className="mb-6"
             onValueChange={(value) => setLoginType(value as "user" | "admin")}
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="user">User Login</TabsTrigger>
-              <TabsTrigger value="admin">Admin Login</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 dark:bg-gray-700/50 bg-gray-200 dark:text-gray-300 text-gray-700">
+              <TabsTrigger value="user" className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black">User Login</TabsTrigger>
+              <TabsTrigger value="admin" className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black">Admin Login</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -121,7 +121,7 @@ const SignIn = () => {
             <div className="space-y-4">
               {/* Username field */}
               <div>
-                <label htmlFor="username" className="block text-sm mb-1">
+                <label htmlFor="username" className="block text-sm mb-1 dark:text-gray-300 text-gray-700">
                   Username
                 </label>
                 <div className="relative">
@@ -132,7 +132,7 @@ const SignIn = () => {
                     onChange={handleChange}
                     placeholder="Enter Username"
                     required
-                    className="bg-black border-gray-700 pr-10"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                   />
                   {/* Show checkmark when username is entered */}
                   {formData.username && (
@@ -146,7 +146,7 @@ const SignIn = () => {
 
               {/* Password field without forgot password link */}
               <div>
-                <label htmlFor="password" className="block text-sm mb-1">
+                <label htmlFor="password" className="block text-sm mb-1 dark:text-gray-300 text-gray-700">
                   Password
                 </label>
                 <Input
@@ -157,14 +157,14 @@ const SignIn = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="bg-black border-gray-700"
+                  className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                 />
               </div>
 
               {/* Submit button with loading state */}
               <Button
                 type="submit"
-                className="w-full mt-4 bg-white text-black hover:bg-gray-200"
+                className="w-full mt-4 dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 dark:disabled:bg-gray-500 disabled:bg-gray-400"
                 disabled={loading}
               >
                 {loading
@@ -174,9 +174,9 @@ const SignIn = () => {
 
               {/* Link to sign up page - show only for user login */}
               {loginType === "user" && (
-                <div className="text-center text-sm text-gray-400 mt-4">
+                <div className="text-center text-sm dark:text-gray-400 text-gray-500 mt-4">
                   Don't have an account?{" "}
-                  <Link to="/signup" className="text-white underline">
+                  <Link to="/signup" className="dark:text-blue-400 text-blue-600 underline dark:hover:text-blue-300 hover:text-blue-700">
                     Sign up
                   </Link>
                 </div>

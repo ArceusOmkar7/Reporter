@@ -112,7 +112,7 @@ export default function UserDetails({
   };
 
   return (
-    <Card className="max-w-2xl mx-auto bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl rounded-3xl p-8">
+    <Card className="max-w-2xl mx-auto dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 bg-white dark:shadow-2xl shadow-lg rounded-3xl p-8 border dark:border-gray-700/50 border-gray-200">
       <CardHeader className="flex flex-col items-center gap-4 pb-0">
         <div className="relative">
           <UserAvatar
@@ -122,12 +122,12 @@ export default function UserDetails({
             className="shadow-lg"
           />
         </div>
-        <CardTitle className="text-2xl font-bold text-white mt-2">
+        <CardTitle className="text-2xl font-bold dark:text-white text-gray-900 mt-2">
           {profile.firstName}{" "}
           {profile.middleName ? profile.middleName + " " : ""}
           {profile.lastName}
         </CardTitle>
-        <CardDescription className="text-primary-300 text-sm">
+        <CardDescription className="dark:text-primary-300 text-primary-500 text-sm">
           {profile.role}
         </CardDescription>
         {isCurrentUser && !isEditing && (
@@ -135,13 +135,13 @@ export default function UserDetails({
             onClick={() => setIsEditing(true)}
             variant="default"
             size="sm"
-            className="mt-2"
+            className="mt-2 dark:bg-blue-600 dark:hover:bg-blue-700 bg-blue-500 hover:bg-blue-600 text-white"
           >
             Edit Profile
           </Button>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="dark:text-gray-100 text-gray-900">
         {isEditing ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -151,9 +151,15 @@ export default function UserDetails({
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel className="dark:text-gray-300 text-gray-700">
+                        First Name
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="First Name" {...field} />
+                        <Input
+                          placeholder="First Name"
+                          {...field}
+                          className="dark:bg-gray-800 bg-white dark:text-gray-100 text-gray-900 dark:border-gray-600 border-gray-300"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -164,9 +170,15 @@ export default function UserDetails({
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel className="dark:text-gray-300 text-gray-700">
+                        Last Name
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Last Name" {...field} />
+                        <Input
+                          placeholder="Last Name"
+                          {...field}
+                          className="dark:bg-gray-800 bg-white dark:text-gray-100 text-gray-900 dark:border-gray-600 border-gray-300"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -177,30 +189,57 @@ export default function UserDetails({
                   name="middleName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Middle Name (optional)</FormLabel>
+                      <FormLabel className="dark:text-gray-300 text-gray-700">
+                        Middle Name (optional)
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Middle Name" {...field} />
+                        <Input
+                          placeholder="Middle Name"
+                          {...field}
+                          className="dark:bg-gray-800 bg-white dark:text-gray-100 text-gray-900 dark:border-gray-600 border-gray-300"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormItem>
-                  <FormLabel>Contact Number</FormLabel>
+                  <FormLabel className="dark:text-gray-300 text-gray-700">
+                    Contact Number
+                  </FormLabel>
                   <FormControl>
-                    <Input value={profile.contactNumber} readOnly disabled />
+                    <Input
+                      value={profile.contactNumber}
+                      readOnly
+                      disabled
+                      className="dark:bg-gray-700/50 bg-gray-100/50 dark:text-gray-400 text-gray-500 dark:border-gray-600 border-gray-300"
+                    />
                   </FormControl>
                 </FormItem>
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="dark:text-gray-300 text-gray-700">
+                    Email
+                  </FormLabel>
                   <FormControl>
-                    <Input value={profile.email} readOnly disabled />
+                    <Input
+                      value={profile.email}
+                      readOnly
+                      disabled
+                      className="dark:bg-gray-700/50 bg-gray-100/50 dark:text-gray-400 text-gray-500 dark:border-gray-600 border-gray-300"
+                    />
                   </FormControl>
                 </FormItem>
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel className="dark:text-gray-300 text-gray-700">
+                    Role
+                  </FormLabel>
                   <FormControl>
-                    <Input value={profile.role} readOnly disabled />
+                    <Input
+                      value={profile.role}
+                      readOnly
+                      disabled
+                      className="dark:bg-gray-700/50 bg-gray-100/50 dark:text-gray-400 text-gray-500 dark:border-gray-600 border-gray-300"
+                    />
                   </FormControl>
                 </FormItem>
               </div>
@@ -210,10 +249,15 @@ export default function UserDetails({
                   variant="outline"
                   onClick={() => setIsEditing(false)}
                   disabled={isSubmitting}
+                  className="dark:border-gray-600 border-gray-300 dark:text-gray-300 text-gray-700 dark:hover:bg-gray-700 hover:bg-gray-100"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="dark:bg-green-600 dark:hover:bg-green-700 bg-green-500 hover:bg-green-600 text-white"
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -234,40 +278,54 @@ export default function UserDetails({
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <UserIcon className="w-4 h-4 text-primary" />
-                <span className="text-gray-400">Username:</span>
-                <span className="text-lg text-white">{profile.username}</span>
+                <span className="dark:text-gray-400 text-gray-600">
+                  Username:
+                </span>
+                <span className="text-lg dark:text-white text-gray-900">
+                  {profile.username}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span className="text-gray-400">Email:</span>
-                <span className="text-lg text-white">{profile.email}</span>
+                <span className="dark:text-gray-400 text-gray-600">Email:</span>
+                <span className="text-lg dark:text-white text-gray-900">
+                  {profile.email}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-gray-400">Contact:</span>
-                <span className="text-lg text-white">
+                <span className="dark:text-gray-400 text-gray-600">
+                  Contact:
+                </span>
+                <span className="text-lg dark:text-white text-gray-900">
                   {profile.contactNumber}
                 </span>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-gray-400">First Name:</span>
-                <span className="text-lg text-white ml-2">
+                <span className="dark:text-gray-400 text-gray-600">
+                  First Name:
+                </span>
+                <span className="text-lg dark:text-white text-gray-900 ml-2">
                   {profile.firstName}
                 </span>
               </div>
               {profile.middleName && (
                 <div>
-                  <span className="text-gray-400">Middle Name:</span>
-                  <span className="text-lg text-white ml-2">
+                  <span className="dark:text-gray-400 text-gray-600">
+                    Middle Name:
+                  </span>
+                  <span className="text-lg dark:text-white text-gray-900 ml-2">
                     {profile.middleName}
                   </span>
                 </div>
               )}
               <div>
-                <span className="text-gray-400">Last Name:</span>
-                <span className="text-lg text-white ml-2">
+                <span className="dark:text-gray-400 text-gray-600">
+                  Last Name:
+                </span>
+                <span className="text-lg dark:text-white text-gray-900 ml-2">
                   {profile.lastName}
                 </span>
               </div>

@@ -78,9 +78,11 @@ export default function UserProfile() {
     return (
       <>
         <Header />
-        <div className="flex h-[70vh] items-center justify-center">
+        <div className="flex h-[70vh] items-center justify-center dark:bg-gray-950 bg-white">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2 text-lg">Loading profile...</span>
+          <span className="ml-2 text-lg dark:text-gray-100 text-gray-900">
+            Loading profile...
+          </span>
         </div>
       </>
     );
@@ -90,16 +92,18 @@ export default function UserProfile() {
     return (
       <>
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <Card className="border-red-200">
+        <div className="container mx-auto px-4 py-8 dark:bg-gray-950 bg-white min-h-screen">
+          <Card className="border-red-200 dark:border-red-700 dark:bg-gray-800 bg-white">
             <CardHeader>
-              <CardTitle className="text-red-500">Error</CardTitle>
+              <CardTitle className="text-red-500 dark:text-red-400">
+                Error
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{error}</p>
+              <p className="dark:text-gray-300 text-gray-700">{error}</p>
               <button
                 onClick={() => navigate(-1)}
-                className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+                className="mt-4 px-4 py-2 bg-primary text-white rounded-md dark:bg-primary/80 dark:hover:bg-primary hover:bg-primary/90"
               >
                 Go Back
               </button>
@@ -114,16 +118,20 @@ export default function UserProfile() {
     return (
       <>
         <Header />
-        <div className="container mx-auto px-4 py-8">
-          <Card>
+        <div className="container mx-auto px-4 py-8 dark:bg-gray-950 bg-white min-h-screen">
+          <Card className="dark:bg-gray-800 dark:border-gray-700 bg-white border-gray-200">
             <CardHeader>
-              <CardTitle>User not found</CardTitle>
+              <CardTitle className="dark:text-gray-100 text-gray-900">
+                User not found
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>The requested user profile could not be found.</p>
+              <p className="dark:text-gray-300 text-gray-700">
+                The requested user profile could not be found.
+              </p>
               <button
                 onClick={() => navigate(-1)}
-                className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+                className="mt-4 px-4 py-2 bg-primary text-white rounded-md dark:bg-primary/80 dark:hover:bg-primary hover:bg-primary/90"
               >
                 Go Back
               </button>
@@ -137,15 +145,25 @@ export default function UserProfile() {
   return (
     <>
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">
+      <div className="container mx-auto px-4 py-8 dark:bg-gray-950 bg-white min-h-screen dark:text-white text-gray-900">
+        <h1 className="text-3xl font-bold mb-6 dark:text-gray-100 text-gray-900">
           {isCurrentUser ? "Your Profile" : `${profile.firstName}'s Profile`}
         </h1>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="details">Profile Details</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsList className="mb-6 dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-200">
+            <TabsTrigger
+              value="details"
+              className="data-[state=active]:dark:bg-gray-950 data-[state=active]:bg-white dark:text-gray-400 text-gray-500 data-[state=active]:dark:text-white data-[state=active]:text-gray-950"
+            >
+              Profile Details
+            </TabsTrigger>
+            <TabsTrigger
+              value="reports"
+              className="data-[state=active]:dark:bg-gray-950 data-[state=active]:bg-white dark:text-gray-400 text-gray-500 data-[state=active]:dark:text-white data-[state=active]:text-gray-950"
+            >
+              Reports
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">

@@ -332,13 +332,13 @@ const BrowseReports = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
       <Header />
       <main className="flex-1 container px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Browse Reports</h1>
           <Link to="/new">
-            <Button className="bg-white text-black hover:bg-gray-200">
+            <Button className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600">
               Start a Report
             </Button>
           </Link>
@@ -346,14 +346,14 @@ const BrowseReports = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Filters sidebar */}
-          <div className="space-y-6 col-span-1">
+          <div className="space-y-6 col-span-1 md:sticky md:top-24 h-fit">
             <div>
               <h3 className="text-lg font-medium mb-3">Search</h3>
               <Input
                 placeholder="Search reports..."
                 value={searchParams.query}
                 onChange={handleSearchChange}
-                className="bg-gray-900 border-gray-700"
+                className="dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-300 focus:border-blue-500 dark:focus:border-blue-500"
               />
             </div>
 
@@ -365,10 +365,10 @@ const BrowseReports = () => {
                 }
                 onValueChange={handleCategoryChange}
               >
-                <SelectTrigger className="bg-gray-900 border-gray-700">
+                <SelectTrigger className="dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-300 focus:border-blue-500 dark:focus:border-blue-500">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectContent className="dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-300">
                   <SelectItem value="all">All Categories</SelectItem>
                   {isLoadingCategories ? (
                     <SelectItem value="loading" disabled>
@@ -379,6 +379,7 @@ const BrowseReports = () => {
                       <SelectItem
                         key={category.categoryID}
                         value={category.categoryName}
+                        className="dark:hover:bg-gray-700 hover:bg-gray-200"
                       >
                         {category.categoryName}
                       </SelectItem>
@@ -394,7 +395,7 @@ const BrowseReports = () => {
                 placeholder="City, State, or Country"
                 value={searchParams.location}
                 onChange={handleLocationChange}
-                className="bg-gray-900 border-gray-700"
+                className="dark:bg-gray-800 bg-gray-100 dark:border-gray-700 border-gray-300 focus:border-blue-500 dark:focus:border-blue-500"
               />
             </div>
 
@@ -403,7 +404,7 @@ const BrowseReports = () => {
                 variant="outline"
                 size="sm"
                 onClick={clearFilters}
-                className="w-full bg-transparent border-gray-700 hover:bg-gray-800"
+                className="w-full dark:bg-transparent bg-white dark:border-gray-700 border-gray-300 dark:hover:bg-gray-800 hover:bg-gray-100"
               >
                 Clear All Filters
               </Button>
@@ -415,34 +416,37 @@ const BrowseReports = () => {
             {isLoadingReports ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <Card key={i} className="bg-gray-900/30 border-gray-800">
+                  <Card
+                    key={i}
+                    className="dark:bg-gray-800/60 bg-gray-100/80 dark:border-gray-700 border-gray-200"
+                  >
                     <CardContent className="p-6">
-                      <Skeleton className="h-6 w-3/4 mb-4 bg-gray-800" />
-                      <Skeleton className="h-4 w-full mb-2 bg-gray-800" />
-                      <Skeleton className="h-4 w-full mb-2 bg-gray-800" />
-                      <Skeleton className="h-4 w-2/3 bg-gray-800" />
+                      <Skeleton className="h-6 w-3/4 mb-4 dark:bg-gray-700 bg-gray-300" />
+                      <Skeleton className="h-4 w-full mb-2 dark:bg-gray-700 bg-gray-300" />
+                      <Skeleton className="h-4 w-full mb-2 dark:bg-gray-700 bg-gray-300" />
+                      <Skeleton className="h-4 w-2/3 dark:bg-gray-700 bg-gray-300" />
                     </CardContent>
-                    <CardFooter className="flex justify-between p-4 border-t border-gray-800">
-                      <Skeleton className="h-8 w-20 bg-gray-800" />
-                      <Skeleton className="h-8 w-20 bg-gray-800" />
+                    <CardFooter className="flex justify-between p-4 dark:border-gray-700 border-gray-200">
+                      <Skeleton className="h-8 w-20 dark:bg-gray-700 bg-gray-300" />
+                      <Skeleton className="h-8 w-20 dark:bg-gray-700 bg-gray-300" />
                     </CardFooter>
                   </Card>
                 ))}
               </div>
             ) : reportsError ? (
               <div className="text-center py-12">
-                <p className="text-red-400">
+                <p className="dark:text-red-400 text-red-600">
                   Error loading reports. Please try again later.
                 </p>
               </div>
             ) : reports?.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400">
+                <p className="dark:text-gray-400 text-gray-500">
                   No reports found matching your criteria.
                 </p>
                 <Button
                   variant="link"
-                  className="text-white mt-2"
+                  className="dark:text-blue-400 text-blue-600 mt-2"
                   onClick={clearFilters}
                 >
                   Clear filters
@@ -467,24 +471,27 @@ const BrowseReports = () => {
                   return (
                     <Card
                       key={report.reportID}
-                      className="bg-gray-900/30 border-gray-800 hover:border-gray-700 transition-all h-full flex flex-col"
+                      className="dark:bg-gray-800/60 bg-white dark:border-gray-700 border-gray-200 dark:hover:border-gray-600 hover:border-gray-300 transition-all h-full flex flex-col shadow-sm hover:shadow-md"
                     >
                       <Link
                         to={`/reports/${report.reportID}`}
                         className="flex-1"
                       >
                         <CardContent className="p-6 flex-1">
-                          <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                          <h3 className="text-xl font-semibold mb-2 line-clamp-2 dark:text-gray-100 text-gray-800">
                             {report.title}
                           </h3>
                           <div className="flex items-center gap-2 mb-2">
                             {report.categoryName && (
-                              <Badge className="bg-gray-800 hover:bg-gray-800 text-white">
+                              <Badge
+                                variant="secondary"
+                                className="dark:bg-gray-700 bg-gray-200 dark:text-gray-300 text-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300"
+                              >
                                 {report.categoryName}
                               </Badge>
                             )}
                             {report.city && report.state && (
-                              <div className="flex items-center gap-1 text-gray-400 text-xs">
+                              <div className="flex items-center gap-1 dark:text-gray-400 text-gray-500 text-xs">
                                 <MapPin size={12} />
                                 <span>
                                   {report.city}, {report.state}
@@ -492,12 +499,12 @@ const BrowseReports = () => {
                               </div>
                             )}
                           </div>
-                          <p className="text-gray-300 line-clamp-3 text-sm">
+                          <p className="dark:text-gray-300 text-gray-600 line-clamp-3 text-sm">
                             {report.description}
                           </p>
                         </CardContent>
                       </Link>
-                      <CardFooter className="flex justify-between p-4 border-t border-gray-800">
+                      <CardFooter className="flex justify-between p-4 dark:border-gray-700 border-gray-200">
                         <div className="flex items-center gap-4">
                           <button
                             onClick={(e) =>

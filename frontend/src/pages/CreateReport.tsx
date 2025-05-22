@@ -371,23 +371,23 @@ const CreateReport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
       <Header />
       <main className="flex-1 container max-w-2xl mx-auto px-4 py-10">
         <div className="mb-8">
           <FormProgressIndicator currentStep={step} totalSteps={3} />
         </div>
 
-        <Card className="bg-gray-900/30 border-gray-800">
+        <Card className="dark:bg-gray-800/60 bg-gray-50 dark:border-gray-700 border-gray-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
+            <CardTitle className="text-2xl font-bold text-center dark:text-gray-100 text-gray-800">
               {getStepTitle()}
             </CardTitle>
           </CardHeader>
 
           <CardContent>{renderStepContent()}</CardContent>
 
-          <CardFooter>
+          <CardFooter className="dark:border-gray-700 border-gray-200 pt-6">
             <FormNavigation
               currentStep={step}
               totalSteps={3}

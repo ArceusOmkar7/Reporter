@@ -68,10 +68,10 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
       <Header />
       <main className="flex-1 container max-w-md mx-auto px-4 py-10">
-        <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-8">
+        <div className="dark:bg-gray-800/60 bg-gray-50 dark:border dark:border-gray-700/60 border border-gray-200 rounded-lg p-8 shadow-xl">
           <h1 className="text-2xl font-bold mb-6 text-center">
             Create an Account
           </h1>
@@ -80,7 +80,10 @@ const SignUp = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="firstName" className="block text-xs mb-1">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                  >
                     First Name
                   </label>
                   <Input
@@ -89,12 +92,15 @@ const SignUp = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     required
-                    className="bg-black border-gray-700"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="middleName" className="block text-xs mb-1">
+                  <label
+                    htmlFor="middleName"
+                    className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                  >
                     Middle Name
                   </label>
                   <Input
@@ -102,12 +108,15 @@ const SignUp = () => {
                     name="middleName"
                     value={formData.middleName}
                     onChange={handleChange}
-                    className="bg-black border-gray-700"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-xs mb-1">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                  >
                     Last Name
                   </label>
                   <Input
@@ -116,13 +125,16 @@ const SignUp = () => {
                     value={formData.lastName}
                     onChange={handleChange}
                     required
-                    className="bg-black border-gray-700"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="username" className="block text-xs mb-1">
+                <label
+                  htmlFor="username"
+                  className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Username
                 </label>
                 <div className="relative">
@@ -133,7 +145,7 @@ const SignUp = () => {
                     onChange={handleChange}
                     placeholder="Enter Username"
                     required
-                    className="bg-black border-gray-700 pr-10"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900 pr-10"
                   />
                   {formData.username && formData.username.length > 3 && (
                     <Check
@@ -145,7 +157,10 @@ const SignUp = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-xs mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Email
                 </label>
                 <div className="relative">
@@ -157,7 +172,7 @@ const SignUp = () => {
                     onChange={handleChange}
                     placeholder="me@example.com"
                     required
-                    className="bg-black border-gray-700 pr-10"
+                    className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900 pr-10"
                   />
                   {formData.email.includes("@") && (
                     <Check
@@ -169,7 +184,10 @@ const SignUp = () => {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-xs mb-1">
+                <label
+                  htmlFor="phone"
+                  className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Phone Number
                 </label>
                 <Input
@@ -180,12 +198,15 @@ const SignUp = () => {
                   onChange={handleChange}
                   placeholder="(123) 456-7890"
                   required
-                  className="bg-black border-gray-700"
+                  className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Password
                 </label>
                 <Input
@@ -195,17 +216,20 @@ const SignUp = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="bg-black border-gray-700"
+                  className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                 />
                 {formData.password && (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs dark:text-gray-400 text-gray-500 mt-1">
                     Must be at least 6 characters
                   </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-xs mb-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-xs mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Confirm Password
                 </label>
                 <Input
@@ -215,21 +239,24 @@ const SignUp = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="bg-black border-gray-700"
+                  className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300 dark:focus:border-blue-500 focus:border-blue-500 dark:text-gray-100 text-gray-900"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full mt-4 bg-white text-black hover:bg-gray-200"
+                className="w-full mt-4 dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 dark:disabled:bg-gray-500 disabled:bg-gray-400"
                 disabled={loading}
               >
                 {loading ? "Creating Account..." : "Sign Up"}
               </Button>
 
-              <div className="text-center text-sm text-gray-400 mt-4">
+              <div className="text-center text-sm dark:text-gray-400 text-gray-500 mt-4">
                 Already have an account?{" "}
-                <Link to="/signin" className="text-white underline">
+                <Link
+                  to="/signin"
+                  className="dark:text-blue-400 text-blue-600 underline dark:hover:text-blue-300 hover:text-blue-700"
+                >
                   Sign in
                 </Link>
               </div>
