@@ -224,6 +224,19 @@ bun test
 
 ## Recent Changes
 
+### Admin Dashboard and Reporting Enhancements (May 22, 2025)
+
+*   **Browse Reports Page**:
+    *   Added pagination to navigate through a large number of reports.
+    *   Implemented sorting functionality to order reports by different criteria.
+*   **Admin Dashboard - Report Management**:
+    *   Added pagination and sorting capabilities, similar to the "Browse Reports" page.
+    *   Implemented new filtering options: search by keyword, filter by category, and filter by location.
+*   **Admin Dashboard - Summary Cards**:
+    *   Fixed an issue where the "Total Reports" count was not displaying correctly. It now accurately reflects the total number of reports in the system.
+*   **Home Page (Index.tsx)**:
+    *   Resolved a "TypeError: data.sort is not a function" error by correctly processing the paginated API response for reports.
+
 ### User Analytics Module (May 22, 2025)
 - Removed time period component from UserAnalytics page
 - Removed user registration trends chart as the database does not track user registration dates (no `createdAt` field in Users table)

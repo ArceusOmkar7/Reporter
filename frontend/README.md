@@ -172,6 +172,20 @@ frontend/
 
 ## Recent Changes
 
+### Reporting and Admin Dashboard Enhancements (May 22, 2025)
+
+*   **`BrowseReports.tsx`**:
+    *   Integrated pagination UI and logic to handle large datasets of reports.
+    *   Added UI elements and handlers for sorting reports.
+*   **`admin/ReportManagement.tsx`**:
+    *   Implemented pagination and sorting features for managing reports.
+    *   Added new filter controls for searching by keyword, and filtering by category and location.
+    *   Updated data fetching to use `@tanstack/react-query` and include new filter/sort parameters.
+*   **`admin/Dashboard.tsx`**:
+    *   Corrected the "Total Reports" summary card to display the accurate count from the `totalReports` field in the API response.
+*   **`Index.tsx` (Home Page)**:
+    *   Fixed a runtime error (`TypeError: data.sort is not a function`) by adapting to the paginated API response structure (i.e., accessing `response.reports`).
+
 ### User Analytics Component (May 22, 2025)
 - Removed time period selector component from UserAnalytics page since the database doesn't track user registration dates
 - Removed user registration trends chart for the same reason

@@ -27,15 +27,16 @@ const Index = () => {
     const fetchReports = async () => {
       try {
         setIsLoading(true);
-        const data = await ReportAPI.search();
+        const response = await ReportAPI.search(); // Changed variable name to response
         // Get random subset of reports (up to 3)
-        const randomReports = data.sort(() => 0.5 - Math.random()).slice(0, 3);
-        setReports(randomReports);
+        // Access the .reports property from the response
+        const fetchedReports = response.reports.sort(() => 0.5 - Math.random()).slice(0, 3); // Renamed to fetchedReports
+        setReports(fetchedReports); // Use fetchedReports
 
         // Fetch user votes for these reports
         if (user?.id) {
           const votes: Record<number, "upvote" | "downvote" | null> = {};
-          for (const report of randomReports) {
+          for (const report of fetchedReports) { // Use fetchedReports
             try {
               const response = await VoteAPI.getVoteCounts(
                 report.reportID,

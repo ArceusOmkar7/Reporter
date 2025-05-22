@@ -47,6 +47,7 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
        - Report submission
        - Report listing and filtering
        - Report status updates
+       - **Enhanced Search**: The `search_reports` endpoint now supports pagination (`page`, `limit`), sorting (`sortBy`), and returns `totalPages`, `currentPage`, and `totalReports` in the response.
      - Users (`app/routes/user.py`)
        - User profile management
        - User listing
