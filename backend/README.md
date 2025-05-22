@@ -53,6 +53,10 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
      - Votes (`app/routes/vote.py`)
        - Vote submission
        - Vote counting
+     - Analytics (`app/routes/analytics.py`)
+       - User analytics (role distribution, location distribution, activity metrics)
+       - Report analytics
+       - System analytics
    - Health check endpoint at root URL
 
 5. **Framework Features**

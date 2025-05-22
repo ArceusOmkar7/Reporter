@@ -43,6 +43,8 @@ This is the frontend for the Reporter application, built with React, TypeScript,
      - Report Details (`ReportDetails.tsx`)
      - Browse Reports (`BrowseReports.tsx`)
    - User Profile (`UserProfile.tsx`)
+   - Analytics pages:
+     - User Analytics (`UserAnalytics.tsx`) - Shows user role distribution, location distribution, and most active users
 
 4. **API Integration**
    - Comprehensive API service (`api-service.ts`)
@@ -167,3 +169,15 @@ frontend/
 - API integration is handled through a centralized service
 - Form validation is implemented using React Hook Form
 - The application is fully responsive and mobile-friendly
+
+## Recent Changes
+
+### User Analytics Component (May 22, 2025)
+- Removed time period selector component from UserAnalytics page since the database doesn't track user registration dates
+- Removed user registration trends chart for the same reason
+- Fixed HTML structure in the User Role Distribution Card
+- Changed API call to use fixed "monthly" period value for consistency
+- Simplified UI to focus on three key analytics visualizations:
+  1. User Role Distribution (pie chart)
+  2. Users by Location (bar chart)
+  3. Most Active Users (table)

@@ -73,15 +73,14 @@ async def users_analytics_endpoint(
     Get comprehensive user analytics
 
     Returns analytics for users including:
-    - Registration trend by date with customizable time period:
-      - Daily
-      - Weekly
-      - Monthly
-      - Quarterly
-      - Yearly
     - User distribution by location (India-specific)
     - User distribution by role
     - Most active users based on report submissions
+
+    Note: Registration trend data is not available as user creation dates
+    are not tracked in the database schema (no createdAt field in Users table).
+    The API still accepts period, start_date, and end_date parameters for
+    consistency, but registration_by_date will always return an empty array.
     """
     # In a production system, check for admin role
     # if user.role != UserRole.ADMINISTRATOR.value:

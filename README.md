@@ -136,6 +136,7 @@ The backend API documentation is available at:
    - Location tracking
    - Voting system
    - API documentation
+   - User analytics API with simplified design
 
 2. **Frontend (User Side - Completed)**
    - User authentication
@@ -146,6 +147,11 @@ The backend API documentation is available at:
    - User profiles
    - Responsive design
    - Voting functionality
+   
+3. **Analytics Features**
+   - User role distribution visualization
+   - User location distribution charts
+   - Most active users tracking
 
 ### In Progress
 
@@ -155,7 +161,6 @@ The backend API documentation is available at:
    - Category management
    - Dashboard analytics
    - System-wide statistics
-   - User activity tracking
 
 ## Contributing
 
@@ -216,6 +221,15 @@ bun test
 - All endpoints are public (to be secured)
 - File uploads need validation
 - Input sanitization needed
+
+## Recent Changes
+
+### User Analytics Module (May 22, 2025)
+- Removed time period component from UserAnalytics page
+- Removed user registration trends chart as the database does not track user registration dates (no `createdAt` field in Users table)
+- Fixed HTML structure in the User Role Distribution Card
+- Updated backend API to return empty array for registration trends
+- Simplified analytics UI to focus on current data rather than historical trends
 
 ## License
 
