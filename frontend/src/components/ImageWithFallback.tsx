@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeContext"; // Added import
 
 interface ImageWithFallbackProps {
   src: string;
@@ -16,6 +17,7 @@ export const ImageWithFallback = ({
   isHomePage = false,
 }: ImageWithFallbackProps) => {
   const [error, setError] = useState(false);
+  const { theme } = useTheme(); // Added theme context
 
   // Function to try different URL formats if the original fails
   const handleError = () => {
@@ -33,9 +35,11 @@ export const ImageWithFallback = ({
   ) {
     // Use placehold.co with the category name and a nice color scheme
     const encodedCategoryName = encodeURIComponent(categoryName);
+    const bgColor = theme === "dark" ? "1f2937" : "e5e7eb"; // Dark: dark gray, Light: light gray
+    const textColor = theme === "dark" ? "ffffff" : "1f2937"; // Dark: white, Light: dark gray
     return (
       <img
-        src={`https://placehold.co/600x400/1f2937/ffffff?text=${encodedCategoryName}`}
+        src={`https://placehold.co/600x400/${bgColor}/${textColor}?text=${encodedCategoryName}`}
         alt={`${categoryName} category`}
         className={className || "w-full h-auto object-cover"}
       />
