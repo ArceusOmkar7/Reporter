@@ -92,9 +92,8 @@ export function UserAnalytics() {
       <Card>
         <CardHeader>
           <CardTitle>User Role Distribution</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <ResponsiveContainer width="100%" height={300}>
+        </CardHeader>        <CardContent className="pt-0">
+          <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
                 data={users_by_role}
@@ -104,7 +103,7 @@ export function UserAnalytics() {
                 label={({ name, percent }) =>
                   `${name}: ${(percent * 100).toFixed(0)}%`
                 }
-                outerRadius={80}
+                outerRadius={120}
                 fill="#8884d8"
                 dataKey="value"
               >
