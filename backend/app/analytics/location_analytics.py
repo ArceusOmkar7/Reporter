@@ -173,14 +173,16 @@ async def get_filtered_heatmap_data(
             conn.close()
 
 
-async def get_location_trends(period: str = "monthly"):
+async def get_location_trends(period: str = "monthly", start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
     """
     Get location trends over time
 
     Analyzes how report locations change over time using the specified period
 
     Args:
-        period: Time period for aggregation ("daily", "weekly", "monthly")
+        period: Time period for aggregation ("daily", "weekly", "monthly", "quarterly", "yearly")
+        start_date: Optional start date for filtering data
+        end_date: Optional end date for filtering data
 
     Returns:
         dict: Location trend data over time
@@ -193,39 +195,80 @@ async def get_location_trends(period: str = "monthly"):
         time_format = {
             "daily": "%Y-%m-%d",
             "weekly": "%Y-%u",  # Year-Week number
-            "monthly": "%Y-%m"
+            "monthly": "%Y-%m",
+            "quarterly": "%Y-Q%q",  # Year-Quarter (MySQL 8.0+)
+            "yearly": "%Y"
         }.get(period, "%Y-%m")
 
-        # Build query to get trends
+        # Handle quarterly format for older MySQL versions
+        if period == "quarterly":
+            format_expression = "CONCAT(YEAR(r.createdAt), '-Q', QUARTER(r.createdAt))"
+        else:
+            format_expression = f"DATE_FORMAT(r.createdAt, '{time_format}')"
+
+        # Build query with date range filtering
         query = f"""
             SELECT 
-                DATE_FORMAT(r.createdAt, '{time_format}') as time_period,
+                {format_expression} as time_period,
                 l.state,
                 COUNT(r.reportID) as report_count
             FROM reports r
             JOIN locations l ON r.locationID = l.locationID
-            WHERE r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+            WHERE 1=1
+        """
+
+        params = []
+
+        # Add date range filters if provided
+        if start_date:
+            query += " AND r.createdAt >= %s"
+            params.append(start_date)
+        else:
+            # Default to last year if no start date provided
+            query += " AND r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)"
+
+        if end_date:
+            query += " AND r.createdAt <= %s"
+            params.append(end_date)
+
+        query += f"""
             GROUP BY time_period, l.state
             ORDER BY time_period, report_count DESC
         """
 
-        cursor.execute(query)
+        cursor.execute(query, params)
         trend_data = cursor.fetchall() or []
 
-        # Get top 5 states
+        # Get top 5 states with same date range
         state_query = """
             SELECT 
                 l.state,
                 COUNT(r.reportID) as report_count
             FROM reports r
             JOIN locations l ON r.locationID = l.locationID
-            WHERE r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+            WHERE 1=1
+        """
+
+        state_params = []
+
+        # Use the same date filters
+        if start_date:
+            state_query += " AND r.createdAt >= %s"
+            state_params.append(start_date)
+        else:
+            state_query += " AND r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)"
+
+        if end_date:
+            state_query += " AND r.createdAt <= %s"
+            state_params.append(end_date)
+
+        state_query += """
             GROUP BY l.state
             ORDER BY report_count DESC
             LIMIT 5
         """
 
-        cursor.execute(state_query)
+        cursor.execute(state_query, state_params)
         top_states = [row['state'] for row in cursor.fetchall()] or []
 
         # Structure data for visualization

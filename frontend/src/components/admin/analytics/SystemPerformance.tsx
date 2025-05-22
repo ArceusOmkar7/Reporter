@@ -26,32 +26,59 @@ import {
   AreaChart,
   Cell,
 } from "recharts";
+import { AnalyticsDateFilter, TimePeriod } from "./AnalyticsDateFilter";
 
 export function SystemPerformance() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [performanceData, setPerformanceData] = useState<any>(null);
+  const [period, setPeriod] = useState<TimePeriod>("monthly");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  const fetchPerformanceData = async (
+    selectedPeriod: TimePeriod = "monthly",
+    start?: string,
+    end?: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await AnalyticsAPI.getSystemPerformance(
+        selectedPeriod,
+        start,
+        end
+      );
+      setPerformanceData(data);
+    } catch (err) {
+      console.error("Error fetching system performance metrics:", err);
+      setError("Failed to load system performance metrics");
+      toast.error("Failed to load system performance metrics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPerformanceData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await AnalyticsAPI.getSystemPerformance();
-        setPerformanceData(data);
-      } catch (err) {
-        console.error("Error fetching system performance metrics:", err);
-        setError("Failed to load system performance metrics");
-        toast.error("Failed to load system performance metrics");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPerformanceData();
   }, []);
 
-  if (loading) {
+  const handlePeriodChange = (newPeriod: TimePeriod) => {
+    setPeriod(newPeriod);
+    fetchPerformanceData(newPeriod, startDate, endDate);
+  };
+
+  const handleDateRangeApply = () => {
+    fetchPerformanceData(period, startDate, endDate);
+  };
+
+  const handleReset = () => {
+    setStartDate("");
+    setEndDate("");
+    fetchPerformanceData(period);
+  };
+
+  if (loading && !performanceData) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -60,7 +87,7 @@ export function SystemPerformance() {
     );
   }
 
-  if (error) {
+  if (error && !performanceData) {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
@@ -69,19 +96,38 @@ export function SystemPerformance() {
     return <div className="p-4">No performance data available</div>;
   }
 
-  const { user_engagement, hourly_activity, monthly_growth } = performanceData;
+  const { user_engagement, hourly_activity, growth_data } = performanceData;
 
   // Calculate overall growth trend
   const overallGrowth =
-    monthly_growth.reduce(
-      (sum: number, month: any) => sum + month.growth_percent,
-      0
-    ) / monthly_growth.length;
+    growth_data && growth_data.length > 0
+      ? growth_data.reduce(
+          (sum: number, month: any) => sum + month.growth_percent,
+          0
+        ) / growth_data.length
+      : 0;
 
   return (
     <div className="grid gap-6">
       <h2 className="text-2xl font-bold">System Performance Metrics</h2>
-
+      {/* Period selector and date range filters */}
+      <AnalyticsDateFilter
+        period={period}
+        startDate={startDate}
+        endDate={endDate}
+        loading={loading}
+        onPeriodChange={handlePeriodChange}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyFilters={handleDateRangeApply}
+        onReset={handleReset}
+      />
+      {loading && performanceData && (
+        <div className="flex items-center justify-center p-4 bg-muted/20 rounded-md">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <span>Updating system performance metrics...</span>
+        </div>
+      )}
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -140,7 +186,6 @@ export function SystemPerformance() {
           </CardContent>
         </Card>
       </div>
-
       {/* Hourly Activity Chart */}
       <Card>
         <CardHeader>
@@ -172,20 +217,21 @@ export function SystemPerformance() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {/* Monthly Growth Chart */}
+      {/* Growth Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Growth Rate</CardTitle>
+          <CardTitle>
+            {period.charAt(0).toUpperCase() + period.slice(1)} Growth Rate
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
-              data={monthly_growth}
+              data={growth_data}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis dataKey="period" />
               <YAxis />
               <Tooltip
                 formatter={(value: any) => [
@@ -195,7 +241,7 @@ export function SystemPerformance() {
               />
               <Legend />
               <Bar dataKey="growth_percent" name="Growth %" fill="#8884d8">
-                {monthly_growth.map((entry: any, index: number) => (
+                {growth_data.map((entry: any, index: number) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.growth_percent >= 0 ? "#82ca9d" : "#ff8042"}
@@ -206,21 +252,22 @@ export function SystemPerformance() {
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
-
-      {/* Monthly Report Count */}
+      </Card>{" "}
+      {/* Period Report Count */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Report Counts</CardTitle>
+          <CardTitle>
+            {period.charAt(0).toUpperCase() + period.slice(1)} Report Counts
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
-              data={monthly_growth}
+              data={growth_data}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis dataKey="period" />
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
               <Tooltip />
@@ -229,15 +276,19 @@ export function SystemPerformance() {
                 yAxisId="left"
                 type="monotone"
                 dataKey="count"
-                name="Current Month"
+                name={`Current ${
+                  period.charAt(0).toUpperCase() + period.slice(1)
+                }`}
                 stroke="#8884d8"
                 activeDot={{ r: 8 }}
               />
               <Line
                 yAxisId="right"
                 type="monotone"
-                dataKey="prev_month_count"
-                name="Previous Month"
+                dataKey="prev_period_count"
+                name={`Previous ${
+                  period.charAt(0).toUpperCase() + period.slice(1)
+                }`}
                 stroke="#82ca9d"
               />
             </LineChart>

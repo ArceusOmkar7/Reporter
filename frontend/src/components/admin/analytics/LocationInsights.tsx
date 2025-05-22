@@ -34,8 +34,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -43,6 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AnalyticsDateFilter, TimePeriod } from "./AnalyticsDateFilter";
 
 // Fix Leaflet default icon issues
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -120,7 +121,7 @@ export function LocationInsights() {
   const heatLayerRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [timeAggregation, setTimeAggregation] = useState<
-    "daily" | "weekly" | "monthly"
+    "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
   >("monthly");
 
   // Filters
@@ -170,7 +171,7 @@ export function LocationInsights() {
   }, []);
 
   const fetchLocationTrends = async (
-    period: "daily" | "weekly" | "monthly"
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
   ) => {
     try {
       setLoadingTrends(true);
@@ -452,24 +453,73 @@ export function LocationInsights() {
 
       {/* Location Trends Over Time */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle>Location Trends Over Time</CardTitle>
-          <Select
-            value={timeAggregation}
-            onValueChange={(val: "daily" | "weekly" | "monthly") => {
-              setTimeAggregation(val);
-              fetchLocationTrends(val);
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Time Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>Location Trends Over Time</CardTitle>
+            <Select
+              value={timeAggregation}
+              onValueChange={(
+                val: "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
+              ) => {
+                setTimeAggregation(val);
+                fetchLocationTrends(val);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Time Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-row items-center gap-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="trend-start-date">Start Date</Label>
+                <Input
+                  id="trend-start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="trend-end-date">End Date</Label>
+                <Input
+                  id="trend-end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 self-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchLocationTrends(timeAggregation)}
+              >
+                Apply
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  fetchLocationTrends(timeAggregation);
+                }}
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           {loadingTrends ? (

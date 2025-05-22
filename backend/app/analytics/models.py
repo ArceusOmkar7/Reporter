@@ -4,7 +4,7 @@ Analytics Data Models
 This module defines Pydantic models used for analytics data responses.
 """
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class TimeSeriesDataPoint(BaseModel):
@@ -31,6 +31,7 @@ class UserAnalytics(BaseModel):
     users_by_location: List[Dict[str, Any]]
     users_by_role: List[Dict[str, Any]]
     most_active_users: List[Dict[str, Any]]
+    period: Optional[str] = None
 
 
 class ReportAnalytics(BaseModel):
@@ -39,3 +40,4 @@ class ReportAnalytics(BaseModel):
     reports_by_location: List[LocationAnalytics]
     reports_trend: List[TimeSeriesDataPoint]
     recent_reports: List[Dict[str, Any]]
+    period: Optional[str] = None

@@ -8,20 +8,31 @@ This module provides functions for report-related analytics data:
 - Recent reports
 """
 from fastapi import HTTPException
+from typing import Optional
 from ..utils.database import get_db_connection
 from .models import ReportAnalytics
 import datetime
+from datetime import date
 
 
-async def get_report_analytics():
+async def get_report_analytics(
+    period: str = "daily",
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+):
     """
     Get comprehensive report analytics
 
     Returns analytics for reports including:
     - Distribution by category
     - Distribution by location
-    - Trend over time
+    - Trend over time with custom period (daily, weekly, monthly, quarterly, yearly)
     - Recent reports
+
+    Args:
+        period: Time period for trend aggregation (daily, weekly, monthly, quarterly, yearly)
+        start_date: Optional start date for filtering data
+        end_date: Optional end date for filtering data
 
     Returns:
         dict: Report analytics data
@@ -52,17 +63,51 @@ async def get_report_analytics():
         """)
         reports_by_location = cursor.fetchall()
 
-        # Get report trend over last 30 days
-        cursor.execute("""
+        # Different time format based on period
+        time_format = {
+            "daily": "%Y-%m-%d",
+            "weekly": "%Y-%u",  # Year-Week number
+            "monthly": "%Y-%m",
+            "quarterly": "%Y-Q%q",  # Year-Quarter (MySQL 8.0+)
+            "yearly": "%Y"
+        }.get(period, "%Y-%m-%d")
+
+        # Handle quarterly format for older MySQL versions
+        if period == "quarterly":
+            format_expression = "CONCAT(YEAR(r.createdAt), '-Q', QUARTER(r.createdAt))"
+        else:
+            format_expression = f"DATE_FORMAT(r.createdAt, '{time_format}')"
+
+        # Get report trend with time period options and date range
+        trend_query = f"""
             SELECT 
-                DATE(r.createdAt) as date, 
+                {format_expression} as date, 
                 COUNT(r.reportID) as count
             FROM reports r
-            WHERE r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            GROUP BY DATE(r.createdAt)
+            WHERE 1=1
+        """
+
+        params = []
+
+        # Add date range filters if provided
+        if start_date:
+            trend_query += " AND r.createdAt >= %s"
+            params.append(start_date)
+        else:
+            # Default to last 30 days if no start date provided
+            trend_query += " AND r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"
+
+        if end_date:
+            trend_query += " AND r.createdAt <= %s"
+            params.append(end_date)
+
+        trend_query += f"""
+            GROUP BY date
             ORDER BY date
-        """)
-        reports_trend_raw = cursor.fetchall()
+        """
+
+        cursor.execute(trend_query, params)
+        reports_trend_raw = cursor.fetchall() or []
 
         # Convert date objects to ISO format strings
         reports_trend = []
@@ -95,7 +140,8 @@ async def get_report_analytics():
             "reports_by_category": reports_by_category,
             "reports_by_location": reports_by_location,
             "reports_trend": reports_trend,
-            "recent_reports": recent_reports
+            "recent_reports": recent_reports,
+            "period": period
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

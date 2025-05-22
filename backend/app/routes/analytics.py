@@ -25,30 +25,60 @@ router = APIRouter()
 
 
 @router.get("/reports", response_model=ReportAnalytics, summary="Get Report Analytics")
-async def reports_analytics_endpoint(user=Depends(get_current_user)):
+async def reports_analytics_endpoint(
+    user=Depends(get_current_user),
+    period: str = Query(
+        "daily", description="Time period for trend aggregation: daily, weekly, monthly, quarterly, or yearly"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for trend analysis"),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for trend analysis")
+):
     """
     Get comprehensive report analytics
 
     Returns analytics for reports including:
     - Distribution by category
     - Distribution by location
-    - Trend over time
+    - Trend over time with customizable time period:
+      - Daily
+      - Weekly
+      - Monthly
+      - Quarterly
+      - Yearly
     - Recent reports
     """
     # In a production system, check for admin role
     # if user.role != UserRole.ADMINISTRATOR.value:
     #     raise HTTPException(status_code=403, detail="Admin access required")
 
-    return await get_report_analytics()
+    if period not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(
+            status_code=400, detail="Period must be one of: daily, weekly, monthly, quarterly, yearly")
+
+    return await get_report_analytics(period=period, start_date=start_date, end_date=end_date)
 
 
 @router.get("/users", response_model=UserAnalytics, summary="Get User Analytics")
-async def users_analytics_endpoint(user=Depends(get_current_user)):
+async def users_analytics_endpoint(
+    user=Depends(get_current_user),
+    period: str = Query(
+        "daily", description="Time period for trend aggregation: daily, weekly, monthly, quarterly, or yearly"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for trend analysis"),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for trend analysis")
+):
     """
     Get comprehensive user analytics
 
     Returns analytics for users including:
-    - Registration trend by date
+    - Registration trend by date with customizable time period:
+      - Daily
+      - Weekly
+      - Monthly
+      - Quarterly
+      - Yearly
     - User distribution by location (India-specific)
     - User distribution by role
     - Most active users based on report submissions
@@ -57,7 +87,11 @@ async def users_analytics_endpoint(user=Depends(get_current_user)):
     # if user.role != UserRole.ADMINISTRATOR.value:
     #     raise HTTPException(status_code=403, detail="Admin access required")
 
-    return await get_user_analytics()
+    if period not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(
+            status_code=400, detail="Period must be one of: daily, weekly, monthly, quarterly, yearly")
+
+    return await get_user_analytics(period=period, start_date=start_date, end_date=end_date)
 
 
 @router.get("/location-insights", summary="Get Location-based Insights")
@@ -111,7 +145,11 @@ async def filtered_heatmap_endpoint(
 async def location_trends_endpoint(
     user=Depends(get_current_user),
     period: str = Query(
-        "monthly", description="Time period for aggregation: daily, weekly, or monthly")
+        "monthly", description="Time period for aggregation: daily, weekly, monthly, quarterly, or yearly"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for analysis period"),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for analysis period")
 ):
     """
     Get location trends over time
@@ -120,6 +158,11 @@ async def location_trends_endpoint(
     - Daily
     - Weekly
     - Monthly (default)
+    - Quarterly
+    - Yearly
+
+    Optional date range filtering:
+    - Filter by custom start and end dates
 
     Returns trend data for visualization
     """
@@ -127,32 +170,57 @@ async def location_trends_endpoint(
     # if user.role != UserRole.ADMINISTRATOR.value:
     #     raise HTTPException(status_code=403, detail="Admin access required")
 
-    if period not in ["daily", "weekly", "monthly"]:
+    if period not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
         raise HTTPException(
-            status_code=400, detail="Period must be one of: daily, weekly, monthly")
+            status_code=400, detail="Period must be one of: daily, weekly, monthly, quarterly, yearly")
 
-    return await get_location_trends(period=period)
+    return await get_location_trends(period=period, start_date=start_date, end_date=end_date)
 
 
 @router.get("/category-analysis", summary="Get Category Analysis")
-async def category_analysis_endpoint(user=Depends(get_current_user)):
+async def category_analysis_endpoint(
+    user=Depends(get_current_user),
+    period: str = Query(
+        "monthly", description="Time period for trend aggregation: daily, weekly, monthly, quarterly, or yearly"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for trend analysis"),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for trend analysis")
+):
     """
     Get category analysis data
 
     Returns analytics about categories:
-    - Category distribution over time
-    - Category resolution rates
-    - Category report complexity
+    - Most reported categories
+    - Category trends over time with customizable period:
+      - Daily
+      - Weekly
+      - Monthly
+      - Quarterly
+      - Yearly
+    - Category by location analysis
     """
     # In a production system, check for admin role
     # if user.role != UserRole.ADMINISTRATOR.value:
     #     raise HTTPException(status_code=403, detail="Admin access required")
 
-    return await get_category_analysis()
+    if period not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(
+            status_code=400, detail="Period must be one of: daily, weekly, monthly, quarterly, yearly")
+
+    return await get_category_analysis(period=period, start_date=start_date, end_date=end_date)
 
 
 @router.get("/system-performance", summary="Get System Performance Metrics")
-async def system_performance_endpoint(user=Depends(get_current_user)):
+async def system_performance_endpoint(
+    user=Depends(get_current_user),
+    period: str = Query(
+        "monthly", description="Time period for growth rate aggregation: daily, weekly, monthly, quarterly, or yearly"),
+    start_date: Optional[datetime] = Query(
+        None, description="Start date for analysis period"),
+    end_date: Optional[datetime] = Query(
+        None, description="End date for analysis period")
+):
     """
     Get system performance metrics
 
@@ -160,9 +228,21 @@ async def system_performance_endpoint(user=Depends(get_current_user)):
     - Database performance 
     - API usage statistics
     - Error rates and issues
+    - User engagement metrics
+    - Hourly activity patterns
+    - Growth rates with customizable time period:
+      - Daily
+      - Weekly
+      - Monthly
+      - Quarterly
+      - Yearly
     """
     # In a production system, check for admin role
     # if user.role != UserRole.ADMINISTRATOR.value:
     #     raise HTTPException(status_code=403, detail="Admin access required")
 
-    return await get_system_performance()
+    if period not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(
+            status_code=400, detail="Period must be one of: daily, weekly, monthly, quarterly, yearly")
+
+    return await get_system_performance(period=period, start_date=start_date, end_date=end_date)

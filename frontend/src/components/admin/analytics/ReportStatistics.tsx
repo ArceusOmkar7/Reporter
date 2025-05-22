@@ -28,6 +28,7 @@ import {
   Line,
   Sector,
 } from "recharts";
+import { AnalyticsDateFilter, TimePeriod } from "./AnalyticsDateFilter";
 
 const COLORS = [
   "#0088FE",
@@ -45,27 +46,53 @@ export function ReportStatistics() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
+  const [period, setPeriod] = useState<TimePeriod>("daily");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  const fetchReportData = async (
+    selectedPeriod: TimePeriod = "daily",
+    start?: string,
+    end?: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await AnalyticsAPI.getReportAnalytics(
+        selectedPeriod,
+        start,
+        end
+      );
+      setReportData(data);
+    } catch (err) {
+      console.error("Error fetching report statistics:", err);
+      setError("Failed to load report statistics");
+      toast.error("Failed to load report statistics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await AnalyticsAPI.getReportAnalytics();
-        setReportData(data);
-      } catch (err) {
-        console.error("Error fetching report statistics:", err);
-        setError("Failed to load report statistics");
-        toast.error("Failed to load report statistics");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchReportData();
   }, []);
 
-  if (loading) {
+  const handlePeriodChange = (newPeriod: TimePeriod) => {
+    setPeriod(newPeriod);
+    fetchReportData(newPeriod, startDate, endDate);
+  };
+
+  const handleDateRangeApply = () => {
+    fetchReportData(period, startDate, endDate);
+  };
+
+  const handleReset = () => {
+    setStartDate("");
+    setEndDate("");
+    fetchReportData(period);
+  };
+
+  if (loading && !reportData) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -74,7 +101,7 @@ export function ReportStatistics() {
     );
   }
 
-  if (error) {
+  if (error && !reportData) {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
@@ -102,7 +129,24 @@ export function ReportStatistics() {
   return (
     <div className="grid gap-6">
       <h2 className="text-2xl font-bold">Report Statistics</h2>
-
+      {/* Period selector and date range filters */}
+      <AnalyticsDateFilter
+        period={period}
+        startDate={startDate}
+        endDate={endDate}
+        loading={loading}
+        onPeriodChange={handlePeriodChange}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyFilters={handleDateRangeApply}
+        onReset={handleReset}
+      />
+      {loading && reportData && (
+        <div className="flex items-center justify-center p-4 bg-muted/20 rounded-md">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <span>Updating report statistics...</span>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Reports by Category Chart */}
         <Card>
@@ -167,12 +211,17 @@ export function ReportStatistics() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
-
+      </div>{" "}
       {/* Reports Trend Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Reports Trend (Last 30 Days)</CardTitle>
+          <CardTitle>
+            {period === "daily" && "Reports Trend (Last 30 Days)"}
+            {period === "weekly" && "Reports Trend (Last 12 Weeks)"}
+            {period === "monthly" && "Reports Trend (Last 12 Months)"}
+            {period === "quarterly" && "Reports Trend (Last 8 Quarters)"}
+            {period === "yearly" && "Reports Trend (Last 5 Years)"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <ResponsiveContainer width="100%" height={300}>
@@ -180,20 +229,104 @@ export function ReportStatistics() {
               data={reports_trend}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" />{" "}
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 12 }}
                 tickFormatter={(value) => {
-                  const date = new Date(value);
-                  return `${date.getDate()}/${date.getMonth() + 1}`;
+                  // Handle different period formats
+                  if (!value) return "";
+
+                  // For quarterly data (format YYYY-Q#)
+                  if (
+                    period === "quarterly" &&
+                    typeof value === "string" &&
+                    value.includes("Q")
+                  ) {
+                    return value;
+                  }
+
+                  // For yearly data
+                  if (
+                    period === "yearly" &&
+                    typeof value === "string" &&
+                    !value.includes("-")
+                  ) {
+                    return value;
+                  }
+
+                  // For weekly data (format YYYY-WW)
+                  if (
+                    period === "weekly" &&
+                    typeof value === "string" &&
+                    value.includes("-")
+                  ) {
+                    const parts = value.split("-");
+                    if (parts.length === 2) {
+                      return `Week ${parts[1]}`;
+                    }
+                    return value;
+                  }
+
+                  // For all other formats that are dates
+                  try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                      return `${date.getDate()}/${date.getMonth() + 1}`;
+                    }
+                  } catch (e) {}
+
+                  // Default case - just return the value
+                  return value;
                 }}
               />
               <YAxis />
               <Tooltip
                 labelFormatter={(value) => {
-                  const date = new Date(value);
-                  return date.toLocaleDateString();
+                  // Handle different period formats in tooltip
+                  if (!value) return "";
+
+                  // For quarterly data (format YYYY-Q#)
+                  if (
+                    period === "quarterly" &&
+                    typeof value === "string" &&
+                    value.includes("Q")
+                  ) {
+                    return value;
+                  }
+
+                  // For yearly data
+                  if (
+                    period === "yearly" &&
+                    typeof value === "string" &&
+                    !value.includes("-")
+                  ) {
+                    return value;
+                  }
+
+                  // For weekly data (format YYYY-WW)
+                  if (
+                    period === "weekly" &&
+                    typeof value === "string" &&
+                    value.includes("-")
+                  ) {
+                    const parts = value.split("-");
+                    if (parts.length === 2) {
+                      return `Week ${parts[1]}, ${parts[0]}`;
+                    }
+                    return value;
+                  }
+
+                  // For all other formats that are dates
+                  try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                      return date.toLocaleDateString();
+                    }
+                  } catch (e) {}
+
+                  // Default case - just return the value
+                  return value;
                 }}
               />
               <Legend />
@@ -208,7 +341,6 @@ export function ReportStatistics() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
       {/* Recent Reports Table */}
       <Card>
         <CardHeader>

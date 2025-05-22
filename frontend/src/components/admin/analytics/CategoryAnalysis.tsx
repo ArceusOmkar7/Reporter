@@ -27,6 +27,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { AnalyticsDateFilter, TimePeriod } from "./AnalyticsDateFilter";
 
 const COLORS = [
   "#0088FE",
@@ -44,35 +45,61 @@ export function CategoryAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [categoryData, setCategoryData] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [period, setPeriod] = useState<TimePeriod>("monthly");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  const fetchCategoryData = async (
+    selectedPeriod: TimePeriod = "monthly",
+    start?: string,
+    end?: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await AnalyticsAPI.getCategoryAnalysis(
+        selectedPeriod,
+        start,
+        end
+      );
+      setCategoryData(data);
+
+      // Set default selected category to the most reported one
+      if (
+        data.most_reported_categories &&
+        data.most_reported_categories.length > 0
+      ) {
+        setSelectedCategory(data.most_reported_categories[0].name);
+      }
+    } catch (err) {
+      console.error("Error fetching category analysis:", err);
+      setError("Failed to load category analysis");
+      toast.error("Failed to load category analysis");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCategoryData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await AnalyticsAPI.getCategoryAnalysis();
-        setCategoryData(data);
-
-        // Set default selected category to the most reported one
-        if (
-          data.most_reported_categories &&
-          data.most_reported_categories.length > 0
-        ) {
-          setSelectedCategory(data.most_reported_categories[0].name);
-        }
-      } catch (err) {
-        console.error("Error fetching category analysis:", err);
-        setError("Failed to load category analysis");
-        toast.error("Failed to load category analysis");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCategoryData();
   }, []);
 
-  if (loading) {
+  const handlePeriodChange = (newPeriod: TimePeriod) => {
+    setPeriod(newPeriod);
+    fetchCategoryData(newPeriod, startDate, endDate);
+  };
+
+  const handleDateRangeApply = () => {
+    fetchCategoryData(period, startDate, endDate);
+  };
+
+  const handleReset = () => {
+    setStartDate("");
+    setEndDate("");
+    fetchCategoryData(period);
+  };
+
+  if (loading && !categoryData) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -81,7 +108,7 @@ export function CategoryAnalysis() {
     );
   }
 
-  if (error) {
+  if (error && !categoryData) {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
@@ -96,13 +123,13 @@ export function CategoryAnalysis() {
   // Process category trends data for the line chart
   const processedTrendData = [];
   const months = Array.from(
-    new Set(category_trends.map((item: any) => item.month))
+    new Set(category_trends.map((item: any) => item.period_date))
   ).sort();
 
   months.forEach((month: any) => {
     const monthData: any = { month };
     category_trends
-      .filter((item: any) => item.month === month)
+      .filter((item: any) => item.period_date === month)
       .forEach((item: any) => {
         monthData[item.categoryName] = item.count;
       });
@@ -118,7 +145,24 @@ export function CategoryAnalysis() {
   return (
     <div className="grid gap-6">
       <h2 className="text-2xl font-bold">Category Analysis</h2>
-
+      {/* Period selector and date range filters */}
+      <AnalyticsDateFilter
+        period={period}
+        startDate={startDate}
+        endDate={endDate}
+        loading={loading}
+        onPeriodChange={handlePeriodChange}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyFilters={handleDateRangeApply}
+        onReset={handleReset}
+      />
+      {loading && categoryData && (
+        <div className="flex items-center justify-center p-4 bg-muted/20 rounded-md">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <span>Updating category analysis...</span>
+        </div>
+      )}
       {/* Most Reported Categories Chart */}
       <Card>
         <CardHeader>
@@ -156,12 +200,17 @@ export function CategoryAnalysis() {
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
-
+      </Card>{" "}
       {/* Category Trends Over Time */}
       <Card>
         <CardHeader>
-          <CardTitle>Category Trends (Last 6 Months)</CardTitle>
+          <CardTitle>
+            {period === "daily" && "Category Trends (Last 30 Days)"}
+            {period === "weekly" && "Category Trends (Last 12 Weeks)"}
+            {period === "monthly" && "Category Trends (Last 12 Months)"}
+            {period === "quarterly" && "Category Trends (Last 8 Quarters)"}
+            {period === "yearly" && "Category Trends (Last 5 Years)"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <ResponsiveContainer width="100%" height={400}>
@@ -169,10 +218,43 @@ export function CategoryAnalysis() {
               data={processedTrendData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
+              {" "}
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis />
-              <Tooltip />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => {
+                  // Handle different period formats
+                  if (!value) return "";
+
+                  // For quarterly data (format YYYY-Q#)
+                  if (
+                    period === "quarterly" &&
+                    typeof value === "string" &&
+                    value.includes("Q")
+                  ) {
+                    return value;
+                  }
+
+                  // For yearly data
+                  if (
+                    period === "yearly" &&
+                    typeof value === "string" &&
+                    !value.includes("-")
+                  ) {
+                    return value;
+                  }
+
+                  return value;
+                }}
+              />
+              <YAxis />{" "}
+              <Tooltip
+                labelFormatter={(value) => {
+                  // Just return the value for all formats since we don't need to parse dates here
+                  return value;
+                }}
+              />
               <Legend />
               {most_reported_categories
                 .slice(0, 5)
@@ -190,7 +272,6 @@ export function CategoryAnalysis() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
       {/* Category by Location Analysis */}
       <Card>
         <CardHeader>

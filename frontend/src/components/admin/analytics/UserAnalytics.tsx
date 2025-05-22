@@ -2,7 +2,6 @@
  * User Analytics Component
  *
  * Displays analytics about users:
- * - User registration trend over time
  * - Most active users
  * - User distribution by location (India-specific)
  * - User role distribution
@@ -24,8 +23,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
 } from "recharts";
 
 const COLORS = [
@@ -42,26 +39,27 @@ export function UserAnalytics() {
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await AnalyticsAPI.getUserAnalytics();
-        setUserData(data);
-      } catch (err) {
-        console.error("Error fetching user analytics:", err);
-        setError("Failed to load user analytics");
-        toast.error("Failed to load user analytics");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Using default period "monthly" as a reasonable timeframe for analytics
+      const data = await AnalyticsAPI.getUserAnalytics("monthly");
+      setUserData(data);
+    } catch (err) {
+      console.error("Error fetching user analytics:", err);
+      setError("Failed to load user analytics");
+      toast.error("Failed to load user analytics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUserData();
   }, []);
 
-  if (loading) {
+  if (loading && !userData) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -70,7 +68,7 @@ export function UserAnalytics() {
     );
   }
 
-  if (error) {
+  if (error && !userData) {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
@@ -79,95 +77,52 @@ export function UserAnalytics() {
     return <div className="p-4">No user data available</div>;
   }
 
-  const {
-    registrations_by_date,
-    users_by_location,
-    users_by_role,
-    most_active_users,
-  } = userData;
+  const { users_by_location, users_by_role, most_active_users } = userData;
 
   return (
     <div className="grid gap-6">
       <h2 className="text-2xl font-bold">User Analytics</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* User Registrations Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Registrations (Last 30 Days)</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={registrations_by_date}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+      {loading && userData && (
+        <div className="flex items-center justify-center p-4 bg-muted/20 rounded-md">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <span>Updating user analytics...</span>
+        </div>
+      )}{" "}
+      {/* User Role Distribution Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>User Role Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={users_by_role}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return `${date.getDate()}/${date.getMonth() + 1}`;
-                  }}
-                />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleDateString();
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  name="Registrations"
-                  stroke="#8884d8"
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* User Role Distribution Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Role Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={users_by_role}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {users_by_role.map((entry: any, index: number) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: any) => [`${value} users`, "Count"]}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
+                {users_by_role.map((entry: any, index: number) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: any) => [`${value} users`, "Count"]}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
       {/* Users by Location Chart */}
       <Card>
         <CardHeader>
@@ -195,7 +150,6 @@ export function UserAnalytics() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
       {/* Most Active Users Table */}
       <Card>
         <CardHeader>

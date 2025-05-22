@@ -483,19 +483,57 @@ export const AnalyticsAPI = {
   /**
    * Get report analytics data
    *
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'
+   * @param {string} startDate - Optional start date for filtering (ISO string)
+   * @param {string} endDate - Optional end date for filtering (ISO string)
    * @returns {Promise<any>} Report analytics data
    */
-  getReportAnalytics: async (): Promise<any> => {
-    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.REPORTS);
+  getReportAnalytics: async (
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" = "daily",
+    startDate?: string,
+    endDate?: string
+  ): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append("period", period);
+
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any>(`${API_ENDPOINTS.ANALYTICS.REPORTS}${queryString}`);
   },
 
   /**
    * Get user analytics data
    *
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'
+   * @param {string} startDate - Optional start date for filtering (ISO string)
+   * @param {string} endDate - Optional end date for filtering (ISO string)
    * @returns {Promise<any>} User analytics data
    */
-  getUserAnalytics: async (): Promise<any> => {
-    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.USERS);
+  getUserAnalytics: async (
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" = "daily",
+    startDate?: string,
+    endDate?: string
+  ): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append("period", period);
+
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any>(`${API_ENDPOINTS.ANALYTICS.USERS}${queryString}`);
   },
 
   /**
@@ -544,32 +582,90 @@ export const AnalyticsAPI = {
   /**
    * Get location trends over time
    *
-   * @param {string} period - Time aggregation period: 'daily', 'weekly', or 'monthly'
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'
+   * @param {string} startDate - Optional start date for filtering (ISO string)
+   * @param {string} endDate - Optional end date for filtering (ISO string)
    * @returns {Promise<any>} Location trend data
    */
   getLocationTrends: async (
-    period: "daily" | "weekly" | "monthly" = "monthly"
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" = "monthly",
+    startDate?: string,
+    endDate?: string
   ): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append("period", period);
+
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
     return apiRequest<any>(
-      `${API_ENDPOINTS.ANALYTICS.LOCATION_TRENDS}?period=${period}`
+      `${API_ENDPOINTS.ANALYTICS.LOCATION_TRENDS}${queryString}`
     );
   },
 
   /**
    * Get category analysis data
    *
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'
+   * @param {string} startDate - Optional start date for filtering (ISO string)
+   * @param {string} endDate - Optional end date for filtering (ISO string)
    * @returns {Promise<any>} Category analysis data
    */
-  getCategoryAnalysis: async (): Promise<any> => {
-    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.CATEGORY_ANALYSIS);
+  getCategoryAnalysis: async (
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" = "monthly",
+    startDate?: string,
+    endDate?: string
+  ): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append("period", period);
+
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any>(
+      `${API_ENDPOINTS.ANALYTICS.CATEGORY_ANALYSIS}${queryString}`
+    );
   },
 
   /**
    * Get system performance metrics
    *
+   * @param {string} period - Time aggregation period: 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'
+   * @param {string} startDate - Optional start date for filtering (ISO string)
+   * @param {string} endDate - Optional end date for filtering (ISO string)
    * @returns {Promise<any>} System performance data
    */
-  getSystemPerformance: async (): Promise<any> => {
-    return apiRequest<any>(API_ENDPOINTS.ANALYTICS.SYSTEM_PERFORMANCE);
+  getSystemPerformance: async (
+    period: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" = "monthly",
+    startDate?: string,
+    endDate?: string
+  ): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append("period", period);
+
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any>(
+      `${API_ENDPOINTS.ANALYTICS.SYSTEM_PERFORMANCE}${queryString}`
+    );
   },
 };

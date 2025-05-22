@@ -10,12 +10,17 @@ from fastapi import HTTPException
 from ..utils.database import get_db_connection
 from datetime import datetime, timedelta
 import logging
+from typing import Optional
 
 # Set up logger
 logger = logging.getLogger(__name__)
 
 
-async def get_system_performance():
+async def get_system_performance(
+    period: str = "monthly",
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None
+):
     """
     Get system performance metrics
 
@@ -25,7 +30,12 @@ async def get_system_performance():
     - Error rates and issues
     - User engagement metrics
     - Hourly activity patterns
-    - Monthly growth rates
+    - Growth rates with customizable time period (daily, weekly, monthly, quarterly, yearly)
+
+    Args:
+        period: Time period for growth aggregation (daily, weekly, monthly, quarterly, yearly)
+        start_date: Optional start date for filtering data
+        end_date: Optional end date for filtering data
 
     Returns:
         dict: System performance metrics
@@ -200,26 +210,64 @@ async def get_system_performance():
             hourly_activity = [{"hour": hour, "count": 0}
                                for hour in range(24)]
 
-        # Monthly growth data - real data from reports table
+        # Growth rate data with time period options (monthly, quarterly, yearly)
         try:
-            cursor.execute("""
+            # Different time format based on period
+            time_format = {
+                "daily": "%Y-%m-%d",
+                "weekly": "%Y-%u",  # Year-Week number
+                "monthly": "%Y-%m",
+                "quarterly": "%Y-Q%q",  # Year-Quarter (MySQL 8.0+)
+                "yearly": "%Y"
+            }.get(period, "%Y-%m")
+
+            # Handle quarterly format for older MySQL versions
+            if period == "quarterly":
+                format_expression = "CONCAT(YEAR(r.createdAt), '-Q', QUARTER(r.createdAt))"
+            else:
+                format_expression = f"DATE_FORMAT(r.createdAt, '{time_format}')"
+
+            # Build growth query with date range filtering
+            growth_query = f"""
                 SELECT 
-                    DATE_FORMAT(createdAt, '%b') as month,
+                    {format_expression} as time_period,
                     COUNT(*) as count
-                FROM reports
-                WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                GROUP BY DATE_FORMAT(createdAt, '%b'), MONTH(createdAt)
-                ORDER BY MONTH(createdAt)
-            """)
-            monthly_results = cursor.fetchall() or []
+                FROM reports r
+                WHERE 1=1
+            """
+
+            growth_params = []
+
+            # Add date range filters if provided
+            if start_date:
+                growth_query += " AND r.createdAt >= %s"
+                growth_params.append(start_date)
+            else:
+                # Default to last year if no start date provided
+                if period == "yearly":
+                    growth_query += " AND r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)"
+                else:
+                    growth_query += " AND r.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)"
+
+            if end_date:
+                growth_query += " AND r.createdAt <= %s"
+                growth_params.append(end_date)
+
+            growth_query += f"""
+                GROUP BY time_period
+                ORDER BY time_period
+            """
+
+            cursor.execute(growth_query, growth_params)
+            period_results = cursor.fetchall() or []
 
             # Process the data to calculate growth percentages
-            monthly_growth = []
+            growth_data = []
 
-            if monthly_results:
-                # Convert the results to a usable format with previous month data
-                for i, current in enumerate(monthly_results):
-                    prev_count = monthly_results[i-1]['count'] if i > 0 else 0
+            if period_results:
+                # Convert the results to a usable format with previous period data
+                for i, current in enumerate(period_results):
+                    prev_count = period_results[i-1]['count'] if i > 0 else 0
                     current_count = current['count']
 
                     # Calculate growth percentage
@@ -229,53 +277,70 @@ async def get_system_performance():
                     else:
                         growth_percent = 100 if current_count > 0 else 0
 
-                    monthly_growth.append({
-                        "month": current['month'],
+                    growth_data.append({
+                        "period": current['time_period'],
                         "count": current_count,
-                        "prev_month_count": prev_count,
+                        "prev_period_count": prev_count,
                         "growth_percent": growth_percent
                     })
 
-            # If no data, provide fallback
-            if not monthly_growth:
-                months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-                prev_count = 100
+            # If no data, provide fallback based on selected period
+            if not growth_data:
+                if period == "daily":
+                    # Last 30 days
+                    periods = [(datetime.now() - timedelta(days=i)
+                                ).strftime("%Y-%m-%d") for i in range(30, 0, -1)]
+                elif period == "weekly":
+                    # Last 12 weeks
+                    periods = [
+                        f"{datetime.now().year}-{(datetime.now().isocalendar()[1] - i) % 52}" for i in range(12, 0, -1)]
+                elif period == "monthly":
+                    # Last 12 months
+                    months = ["Jan", "Feb", "Mar", "Apr", "May",
+                              "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                    current_month = datetime.now().month
+                    periods = [
+                        f"{datetime.now().year}-{(current_month - i) % 12 or 12:02d}" for i in range(12, 0, -1)]
+                elif period == "quarterly":
+                    # Last 8 quarters
+                    current_quarter = (datetime.now().month - 1) // 3 + 1
+                    current_year = datetime.now().year
+                    periods = []
+                    for i in range(8, 0, -1):
+                        q = (current_quarter - i) % 4
+                        if q <= 0:
+                            q += 4
+                        y = current_year - ((i - current_quarter + 4) // 4)
+                        periods.append(f"{y}-Q{q}")
+                else:  # yearly
+                    # Last 5 years
+                    current_year = datetime.now().year
+                    periods = [str(current_year - i) for i in range(5, 0, -1)]
 
-                for month in months:
+                # Generate mock growth data
+                prev_count = 100
+                for per in periods:
                     growth_percent = 5  # Default 5% growth
+                    if len(growth_data) > 0:
+                        # Add some variability
+                        import random
+                        growth_percent = random.uniform(-2, 10)
+
                     current_count = int(
                         prev_count * (1 + growth_percent / 100))
 
-                    monthly_growth.append({
-                        "month": month,
+                    growth_data.append({
+                        "period": per,
                         "count": current_count,
-                        "prev_month_count": prev_count,
+                        "prev_period_count": prev_count,
                         "growth_percent": growth_percent
                     })
 
                     prev_count = current_count
-
         except Exception as e:
-            logger.error(f"Error calculating monthly growth: {str(e)}")
-            # Fallback to empty monthly data
-            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            monthly_growth = []
-            prev_count = 100
-
-            for month in months:
-                growth_percent = 5  # Default 5% growth
-                current_count = int(prev_count * (1 + growth_percent / 100))
-
-                monthly_growth.append({
-                    "month": month,
-                    "count": current_count,
-                    "prev_month_count": prev_count,
-                    "growth_percent": growth_percent
-                })
-
-                prev_count = current_count
+            logger.error(f"Error calculating {period} growth: {str(e)}")
+            # Fallback to empty data
+            growth_data = []
 
         return {
             "table_sizes": table_sizes,
@@ -284,7 +349,8 @@ async def get_system_performance():
             "error_rates": error_rates,
             "user_engagement": user_engagement,
             "hourly_activity": hourly_activity,
-            "monthly_growth": monthly_growth
+            "growth_data": growth_data,
+            "period": period
         }
     except Exception as e:
         logger.error(f"System performance error: {str(e)}")
