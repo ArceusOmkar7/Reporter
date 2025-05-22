@@ -1,8 +1,8 @@
-# Reporter Frontend
+# Reportr Frontend
 
 ## Overview
 
-This is the frontend for the Reporter application, built with React, TypeScript, and Vite. It provides a modern, responsive user interface for submitting and managing reports, user authentication, and interacting with the backend API.
+This is the frontend for the Reportr application, built with React, TypeScript, and Vite. It provides a modern, responsive user interface for submitting and managing reports, user authentication, and interacting with the backend API.
 
 ## Tech Stack
 

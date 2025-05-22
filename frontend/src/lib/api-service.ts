@@ -1,7 +1,7 @@
 /**
  * API Service Module
  *
- * This module provides a structured interface for interacting with the Reporter backend API.
+ * This module provides a structured interface for interacting with the Reportr backend API.
  * It includes services for authentication, user management, reports, categories, locations,
  * votes, and image uploads.
  */

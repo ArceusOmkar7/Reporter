@@ -1,10 +1,10 @@
-# Reporter
+# Reportr
 
 A full-stack web application for reporting and tracking community issues, built with React, FastAPI, and MySQL.
 
 ## Project Overview
 
-Reporter is a platform that enables users to submit, track, and manage community reports. Users can create detailed reports with images, locations, and categories, while other users can vote and engage with these reports.
+Reportr is a platform that enables users to submit, track, and manage community reports. Users can create detailed reports with images, locations, and categories, while other users can vote and engage with these reports.
 
 ### Key Features
 

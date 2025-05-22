@@ -1,5 +1,5 @@
 /**
- * Main entry point for the Reporter application
+ * Main entry point for the Reportr application
  * This file initializes React and renders the main App component
  * into the root DOM element.
  */

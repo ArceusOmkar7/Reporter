@@ -238,12 +238,12 @@ const Index = () => {
           <div className="container max-w-6xl mx-auto px-4">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="w-full md:w-1/2 text-center md:text-left z-10">
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text dark:text-transparent text-blue-600 dark:bg-gradient-to-r dark:from-blue-400 dark:to-purple-500">
-                  Make Your Voice Heard
+                <h1 className="text-5xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                  Reportr
                 </h1>
-                <p className="text-lg dark:text-gray-300 text-gray-600 mb-8 max-w-lg">
-                  Create and sign reports to bring positive change to your
-                  community. Together we can build a better tomorrow.
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                  Make your voice heard. Report issues, track progress, and
+                  build a better community together.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
                   <Link to="/new">
@@ -330,43 +330,12 @@ const Index = () => {
         </section>
       </main>
       {/* Footer */}{" "}
-      <footer className="py-8 dark:bg-gray-900 bg-gray-100 dark:text-gray-400 text-gray-600">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <Link
-                to="/"
-                className="text-xl font-bold dark:text-white text-gray-900"
-              >
-                Reporter
-              </Link>
-              <p className="text-sm mt-2">Making community voices heard</p>
-            </div>{" "}
-            <div className="flex items-center gap-6">
-              <Link
-                to="/browse"
-                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
-              >
-                Browse Reports
-              </Link>
-              <Link
-                to="/new"
-                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
-              >
-                Start a Report
-              </Link>
-              <Link
-                to="/signin"
-                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
-              >
-                Sign In
-              </Link>
-            </div>
+      <footer>
+        <div className="container mx-auto px-4 md:px-6 py-8 text-center">
+          <div className="mb-4">
+            {/* Social media icons can be added here */}
           </div>
-
-          <div className="border-t dark:border-gray-800 border-gray-200 mt-6 pt-6 text-center text-sm">
-            <p>© {new Date().getFullYear()} Reporter. All rights reserved.</p>
-          </div>
+          <p>© {new Date().getFullYear()} Reportr. All rights reserved.</p>
         </div>
       </footer>
     </div>

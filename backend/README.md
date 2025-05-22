@@ -1,8 +1,8 @@
-# Reporter Backend
+# Reportr Backend
 
 ## Overview
 
-This is the backend for the Reporter application, built with FastAPI and MySQL. It provides RESTful API endpoints for user authentication, report submission, image uploads, voting, and more. The API is fully public with no authentication requirements.
+This is the backend for the Reportr application, built with FastAPI and MySQL. It provides RESTful API endpoints for user authentication, report submission, image uploads, voting, and more. The API is fully public with no authentication requirements.
 
 ## Completed Tasks
 
@@ -119,7 +119,7 @@ This is the backend for the Reporter application, built with FastAPI and MySQL. 
    ```
 
 4. Set up the MySQL database:
-   - Create a database named `reporter_py`
+   - Create a database named `reportr_py`
    - Run the SQL commands in `table_creation.sql`
    - Run the sample data in `table_insertion.sql`
    - Update database credentials in `app/config/config.py` if needed

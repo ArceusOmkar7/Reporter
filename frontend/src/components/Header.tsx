@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Shield } from "lucide-react";
+import { LogOut, User, Shield, Mountain } from "lucide-react";
 
 /**
  * Header component with responsive navigation
@@ -38,11 +38,9 @@ export const Header = () => {
     <header className="w-full border-b dark:border-gray-800 border-gray-200 dark:bg-gray-950 bg-white">
       <div className="container flex items-center justify-between py-4">
         {/* Application Logo/Title */}
-        <Link
-          to="/"
-          className="text-xl font-bold dark:text-white text-gray-900"
-        >
-          Reporter
+        <Link to="/" className="flex items-center gap-2">
+          <Mountain className="h-6 w-6 text-primary" />
+          <span className="text-lg font-semibold text-primary">Reportr</span>
         </Link>
 
         {/* Navigation Links */}
