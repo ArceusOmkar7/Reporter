@@ -4,11 +4,14 @@
  * Main navigation header for the application. Includes:
  * - Application logo/title
  * - Navigation links
+ * - Theme toggle switch
  * - Authentication state-dependent UI (sign in/up buttons or user dropdown)
  */
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,21 +34,31 @@ import { LogOut, User, Shield } from "lucide-react";
 export const Header = () => {
   // Get authentication state and functions from context
   const { user, isAuthenticated, logout } = useAuth();
+  const { theme } = useTheme();
 
   return (
-    <header className="w-full border-b border-gray-800">
+    <header className="w-full border-b dark:border-gray-800 border-gray-200">
       <div className="container flex items-center justify-between py-4">
         {/* Application Logo/Title */}
-        <Link to="/" className="text-xl font-bold text-white">
+        <Link
+          to="/"
+          className="text-xl font-bold dark:text-white text-gray-900"
+        >
           Reporter
         </Link>
 
         {/* Navigation Links */}
         <nav className="flex items-center gap-4">
-          <Link to="/browse" className="text-sm text-gray-300 hover:text-white">
+          <Link
+            to="/browse"
+            className="text-sm dark:text-gray-300 text-gray-600 hover:dark:text-white hover:text-gray-900"
+          >
             Browse Reports
           </Link>
-          <Link to="/new" className="text-sm text-gray-300 hover:text-white">
+          <Link
+            to="/new"
+            className="text-sm dark:text-gray-300 text-gray-600 hover:dark:text-white hover:text-gray-900"
+          >
             Start a Report
           </Link>
 
@@ -53,45 +66,46 @@ export const Header = () => {
           {isAuthenticated ? (
             // User is authenticated - Show user dropdown menu
             <DropdownMenu>
+              {" "}
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-sm bg-transparent border-gray-700 hover:bg-gray-800"
+                  className="text-sm bg-transparent dark:border-gray-700 border-gray-300 dark:hover:bg-gray-800 hover:bg-gray-100"
                 >
                   {user?.username || "Account"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 bg-gray-900 border-gray-800 text-gray-200"
+                className="w-56 dark:bg-gray-900 bg-white dark:border-gray-800 border-gray-200 dark:text-gray-200 text-gray-800"
               >
+                {" "}
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-800" />
+                <DropdownMenuSeparator className="dark:bg-gray-800 bg-gray-200" />
                 {/* User profile link */}
                 <Link to={`/profile/${user?.id}`}>
-                  <DropdownMenuItem className="cursor-pointer hover:bg-gray-800 flex items-center gap-2">
+                  {" "}
+                  <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-100 flex items-center gap-2">
                     <User size={16} />
                     Profile
                   </DropdownMenuItem>
                 </Link>
-
-                {/* Admin Dashboard link - only show for administrators */}
+                {/* Admin Dashboard link - only show for administrators */}{" "}
                 {user?.role === "Administrator" && (
                   <>
-                    <DropdownMenuSeparator className="bg-gray-800" />
+                    <DropdownMenuSeparator className="dark:bg-gray-800 bg-gray-200" />
                     <Link to="/admin/dashboard">
-                      <DropdownMenuItem className="cursor-pointer hover:bg-gray-800 flex items-center gap-2 text-purple-400">
+                      <DropdownMenuItem className="cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-100 flex items-center gap-2 text-purple-400">
                         <Shield size={16} />
                         Admin Dashboard
                       </DropdownMenuItem>
                     </Link>
                   </>
-                )}
-
-                <DropdownMenuSeparator className="bg-gray-800" />
+                )}{" "}
+                <DropdownMenuSeparator className="dark:bg-gray-800 bg-gray-200" />
                 {/* Logout button */}
                 <DropdownMenuItem
-                  className="cursor-pointer hover:bg-gray-800 text-red-400 flex items-center gap-2"
+                  className="cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-100 text-red-400 flex items-center gap-2"
                   onClick={() => logout()}
                 >
                   <LogOut size={16} />
@@ -102,16 +116,17 @@ export const Header = () => {
           ) : (
             // User is not authenticated - Show sign in/up buttons
             <>
+              {" "}
               <Link
                 to="/signin"
-                className="text-sm text-gray-300 hover:text-white"
+                className="text-sm dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-gray-900"
               >
                 Sign In
               </Link>
               <Link to="/signup">
                 <Button
                   variant="outline"
-                  className="text-sm bg-transparent border-gray-700 hover:bg-gray-800"
+                  className="text-sm bg-transparent dark:border-gray-700 border-gray-300 dark:hover:bg-gray-800 hover:bg-gray-100"
                 >
                   Sign Up
                 </Button>

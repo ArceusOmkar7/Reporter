@@ -8,6 +8,8 @@ import { ReportAPI, VoteAPI } from "@/lib/api-service";
 import { API_BASE_URL } from "@/lib/api-config";
 import type { ReportListItem } from "@/lib/api-types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ToastAction } from "@/components/ui/toast";
 
 const Index = () => {
@@ -217,41 +219,68 @@ const Index = () => {
         ? `${API_BASE_URL}/api/image/${report.reportID}`
         : "/placeholder-report.svg",
   });
-
+  const { theme } = useTheme();
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <Header />
+    <div className="min-h-screen dark:bg-gray-950 bg-white dark:text-white text-gray-900 flex flex-col">
+      <Header /> {/* Floating Theme Toggle */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="p-2 dark:bg-gray-800/80 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border dark:border-gray-700 border-gray-200 transition-all hover:scale-110 hover:shadow-xl animate-pulse-slow">
+          <ThemeToggle variant="ghost" size="icon" />
+          <span className="sr-only">Toggle theme</span>
+        </div>
+      </div>
       <main className="flex-1">
-        <section className="py-20 text-center">
-          <div className="container max-w-4xl mx-auto px-4">
-            <h1 className="text-4xl font-bold mb-6">Make Your Voice Heard</h1>
-            <p className="text-lg text-gray-300 mb-8">
-              Create and sign reports to bring positive change to your community
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link to="/new">
-                <Button className="bg-white text-black hover:bg-gray-100 rounded-md">
-                  Start a Report
-                </Button>
-              </Link>
-              <Link to="/browse">
-                <Button
-                  variant="outline"
-                  className="bg-transparent border-gray-700 hover:bg-gray-800"
-                >
-                  Browse Reports
-                </Button>
-              </Link>
+        <section className="py-16 md:py-24 relative overflow-hidden">
+          <div className="container max-w-6xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="w-full md:w-1/2 text-center md:text-left z-10">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text dark:text-transparent text-blue-600 dark:bg-gradient-to-r dark:from-blue-400 dark:to-purple-500">
+                  Make Your Voice Heard
+                </h1>
+                <p className="text-lg dark:text-gray-300 text-gray-600 mb-8 max-w-lg">
+                  Create and sign reports to bring positive change to your
+                  community. Together we can build a better tomorrow.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
+                  <Link to="/new">
+                    <Button className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md px-6 py-2">
+                      Start a Report
+                    </Button>
+                  </Link>
+                  <Link to="/browse">
+                    <Button
+                      variant="outline"
+                      className="dark:bg-transparent bg-white dark:border-blue-700 border-blue-600 dark:text-blue-400 text-blue-600 dark:hover:bg-blue-950/50 hover:bg-blue-50 px-6 py-2"
+                    >
+                      Browse Reports
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="w-full md:w-1/2 relative">
+                <div className="p-2 dark:bg-gradient-to-br dark:from-blue-500 dark:to-purple-600 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl shadow-xl">
+                  <div className="w-full rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 p-1">
+                    <img
+                      src="/hero.jpg"
+                      alt="Community"
+                      className="w-full h-auto max-h-80 object-cover mx-auto"
+                    />
+                  </div>
+                </div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 dark:bg-blue-500/20 bg-blue-300/20 rounded-full filter blur-3xl"></div>
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 dark:bg-purple-500/20 bg-purple-300/20 rounded-full filter blur-3xl"></div>
+              </div>
             </div>
           </div>
-        </section>
-        <section className="py-16 bg-gray-900/30">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] dark:bg-blue-900/20 bg-blue-100/50 rounded-full filter blur-3xl -z-10"></div>
+        </section>{" "}
+        <section className="py-16 dark:bg-gray-900/30 bg-gray-50 relative">
           <div className="container max-w-6xl mx-auto px-4">
             <div className="flex justify-between items-center mb-10">
               <h2 className="text-2xl font-bold">Featured Reports</h2>
               <Link
                 to="/browse"
-                className="text-sm text-gray-400 hover:text-white"
+                className="text-sm dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 transition-colors"
               >
                 View All
               </Link>
@@ -261,7 +290,7 @@ const Index = () => {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="bg-gray-800/50 animate-pulse rounded-md h-80"
+                    className="dark:bg-gray-800/50 bg-gray-200/80 animate-pulse rounded-md h-80"
                   ></div>
                 ))}
               </div>
@@ -271,7 +300,7 @@ const Index = () => {
                   <Link
                     key={report.reportID}
                     to={`/reports/${report.reportID}`}
-                    className="block"
+                    className="block hover:scale-[1.02] transition-transform"
                   >
                     <ReportCard
                       {...formatReportForCard(report)}
@@ -284,10 +313,10 @@ const Index = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-400 py-12">
+              <div className="text-center dark:text-gray-400 text-gray-500 py-12">
                 <p>No reports found. Be the first to create a report!</p>
                 <Link to="/new" className="mt-4 inline-block">
-                  <Button className="bg-white text-black hover:bg-gray-100 mt-4">
+                  <Button className="dark:bg-blue-500 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 mt-4">
                     Create Report
                   </Button>
                 </Link>
@@ -295,53 +324,47 @@ const Index = () => {
             )}
           </div>
         </section>
-        <section className="py-16">
-          <div className="container max-w-4xl mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-10 text-center">
-              How It Works
-            </h2>
-            <p className="text-sm text-gray-400 text-center mb-8">
-              Creating change is easy with our platform
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold mb-4">
-                  1
-                </div>
-                <h3 className="text-xl font-bold mb-2">Create a Report</h3>
-                <p className="text-sm text-gray-400">
-                  Sign up and create a report about an issue you care about.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold mb-4">
-                  2
-                </div>
-                <h3 className="text-xl font-bold mb-2">Gather Support</h3>
-                <p className="text-sm text-gray-400">
-                  Share your report and gather votes from supporters.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold mb-4">
-                  3
-                </div>
-                <h3 className="text-xl font-bold mb-2">Create Change</h3>
-                <p className="text-sm text-gray-400">
-                  Use your report to advocate for meaningful change.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-center mt-10">
-              <Link to="/new">
-                <Button className="bg-white text-black hover:bg-gray-100">
-                  Get Started
-                </Button>
+      </main>
+      {/* Footer */}{" "}
+      <footer className="py-8 dark:bg-gray-900 bg-gray-100 dark:text-gray-400 text-gray-600">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <Link
+                to="/"
+                className="text-xl font-bold dark:text-white text-gray-900"
+              >
+                Reporter
+              </Link>
+              <p className="text-sm mt-2">Making community voices heard</p>
+            </div>{" "}
+            <div className="flex items-center gap-6">
+              <Link
+                to="/browse"
+                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
+              >
+                Browse Reports
+              </Link>
+              <Link
+                to="/new"
+                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
+              >
+                Start a Report
+              </Link>
+              <Link
+                to="/signin"
+                className="text-sm hover:dark:text-white hover:text-gray-900 transition-colors"
+              >
+                Sign In
               </Link>
             </div>
           </div>
-        </section>{" "}
-      </main>
+
+          <div className="border-t dark:border-gray-800 border-gray-200 mt-6 pt-6 text-center text-sm">
+            <p>© {new Date().getFullYear()} Reporter. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
