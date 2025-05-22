@@ -98,6 +98,7 @@ def create_app():
     from .routes.image import router as image_router
     from .routes.vote import router as vote_router
     from .routes.analytics import router as analytics_router
+    from .routes.admin import router as admin_router  # Import the admin router
 
     # Include each router with appropriate prefix and tags for OpenAPI documentation
     app.include_router(auth_router, prefix="/api/auth",
@@ -112,6 +113,8 @@ def create_app():
     app.include_router(vote_router, prefix="/api/vote", tags=["Votes"])
     app.include_router(
         analytics_router, prefix="/api/analytics", tags=["Analytics"])
+    app.include_router(admin_router, prefix="/api/admin",
+                       tags=["Admin"])  # Include the admin router
 
     # Exception handlers
     @app.exception_handler(HTTPException)

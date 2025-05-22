@@ -21,6 +21,7 @@ import { UserManagement } from "../../components/admin/UserManagement";
 import { ReportManagement } from "../../components/admin/ReportManagement";
 import { CategoryManagement } from "../../components/admin/CategoryManagement";
 import { AnalyticsDashboard } from "../../components/admin/analytics/AnalyticsDashboard";
+import AdminQueryPage from "@/components/admin/AdminQuery";
 import { Loader2 } from "lucide-react";
 import { ReportListItem } from "@/lib/api-types";
 
@@ -131,6 +132,8 @@ export default function AdminDashboard() {
             <TabsTrigger value="reports">Report Management</TabsTrigger>
             <TabsTrigger value="categories">Category Management</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="sql-query">SQL Query Executor</TabsTrigger>{" "}
+            {/* Add new tab trigger */}
           </TabsList>
 
           <TabsContent value="users" className="p-4 border rounded-md">
@@ -147,6 +150,11 @@ export default function AdminDashboard() {
 
           <TabsContent value="analytics" className="p-4 border rounded-md">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          {/* Add new tab content for SQL Query Executor */}
+          <TabsContent value="sql-query" className="p-4 border rounded-md">
+            <AdminQueryPage />
           </TabsContent>
         </Tabs>
       </div>
