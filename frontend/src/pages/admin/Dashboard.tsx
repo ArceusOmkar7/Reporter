@@ -60,11 +60,11 @@ export default function AdminDashboard() {
       try {
         // Fetch basic stats for dashboard
         const users = await UserAPI.getAllUsers();
-        const reports = await ReportAPI.search();
+        const reportsData = await ReportAPI.search(); // Renamed to reportsData
 
         setStats({
           totalUsers: users.length,
-          totalReports: reports.length,
+          totalReports: reportsData.totalReports, // Use totalReports from the API response
         });
       } catch (error) {
         console.error("Error fetching admin dashboard data:", error);
