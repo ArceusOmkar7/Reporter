@@ -37,10 +37,15 @@ export default function UserProfile() {
 
         // Fetch reports created by this user
         const reportData = await ReportAPI.search();
-        const userReports = reportData.filter(
-          (report) => report.username === userProfile.username
-        );
-        setReports(userReports);
+        if (userProfile && reportData && reportData.reports) {
+          const userReports = reportData.reports.filter(
+            (report: ReportListItem) => report.username === userProfile.username
+          );
+          setReports(userReports);
+        } else {
+          // If reportData or reportData.reports is not as expected, set empty array
+          setReports([]);
+        }
 
         setError(null);
       } catch (err) {

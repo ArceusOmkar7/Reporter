@@ -150,7 +150,8 @@ const AdminQueryPage: React.FC = () => {
         className="mb-6 p-4 border border-primary/30 rounded-md bg-primary/10"
       >
         <h2 className="text-xl font-semibold mb-3 text-primary">
-          Generate SQL with AI
+          Generate SQL with AI{" "}
+          <span className="text-red-600 text-sm">(For testing purposes)</span>
         </h2>
         <div className="mb-4">
           <label

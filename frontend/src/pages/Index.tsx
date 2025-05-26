@@ -241,7 +241,7 @@ const Index = () => {
                 <h1 className="text-5xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
                   Reportr
                 </h1>
-                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 my-7">
                   Make your voice heard. Report issues, track progress, and
                   build a better community together.
                 </p>
