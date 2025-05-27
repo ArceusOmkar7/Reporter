@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { API_BASE_URL, API_ENDPOINTS } from "@/lib/api-config"; // Import API_BASE_URL and API_ENDPOINTS
 
 const AdminQueryPage: React.FC = () => {
   const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
@@ -47,7 +48,7 @@ const AdminQueryPage: React.FC = () => {
       }
 
       const response = await fetch(
-        "http://localhost:8000/api/admin/generate-sql-from-natural-language",
+        `${API_BASE_URL}${API_ENDPOINTS.ADMIN.GENERATE_SQL}`,
         {
           method: "POST",
           headers: headers,
@@ -112,7 +113,7 @@ const AdminQueryPage: React.FC = () => {
       }
 
       const response = await fetch(
-        "http://localhost:8000/api/admin/execute-query",
+        `${API_BASE_URL}${API_ENDPOINTS.ADMIN.EXECUTE_QUERY}`,
         {
           method: "POST",
           headers: headers,

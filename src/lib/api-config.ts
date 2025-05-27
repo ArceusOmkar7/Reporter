@@ -83,4 +83,9 @@ export const API_ENDPOINTS = {
     CATEGORY_ANALYSIS: "/api/analytics/category-analysis",
     SYSTEM_PERFORMANCE: "/api/analytics/system-performance",
   },
+  // Admin
+  ADMIN: {
+    EXECUTE_QUERY: "/api/admin/execute-query",
+    GENERATE_SQL: "/api/admin/generate-sql-from-natural-language",
+  },
 };
