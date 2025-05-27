@@ -1,8 +1,31 @@
 // API configuration
 
 // Base API URL - adjust this based on your backend server location
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+let determinedApiBaseUrl: string;
+
+if (rawApiBaseUrl) {
+  if (
+    rawApiBaseUrl.startsWith("http://") ||
+    rawApiBaseUrl.startsWith("https://")
+  ) {
+    determinedApiBaseUrl = rawApiBaseUrl;
+  } else if (
+    rawApiBaseUrl.includes("localhost") ||
+    rawApiBaseUrl.includes("127.0.0.1")
+  ) {
+    // Assume http for localhost if no protocol is specified
+    determinedApiBaseUrl = `http://${rawApiBaseUrl}`;
+  } else {
+    // Default to https for other domains if no protocol is specified
+    determinedApiBaseUrl = `https://${rawApiBaseUrl}`;
+  }
+} else {
+  // Fallback to local development URL
+  determinedApiBaseUrl = "http://127.0.0.1:8000";
+}
+
+export const API_BASE_URL = determinedApiBaseUrl;
 
 // API endpoints
 export const API_ENDPOINTS = {
