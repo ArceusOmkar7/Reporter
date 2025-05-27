@@ -167,7 +167,7 @@ const AdminQueryPage: React.FC = () => {
             onChange={(e) => setNaturalLanguageQuery(e.target.value)}
             rows={3}
             className="w-full p-2 border border-input rounded-md shadow-sm focus:ring-ring focus:border-ring bg-background text-foreground"
-            placeholder="e.g., Show me all users who registered in the last month and live in 'Mumbai'"
+            placeholder="e.g., Show me all users who live in 'Mumbai' and has posted a report in last 1 month"
             required
           />
         </div>
