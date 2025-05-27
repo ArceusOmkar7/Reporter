@@ -106,14 +106,29 @@ const SignIn = () => {
           <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
 
           {/* Login type selector */}
+          <div className="text-center text-sm text-muted-foreground mb-4">
+            For testing purposes, use admin credentials: <br />
+            Username: <strong>abhinav_hazarika</strong> <br />
+            Password: <strong>password123</strong>
+          </div>
           <Tabs
             defaultValue="user"
             className="mb-6"
             onValueChange={(value) => setLoginType(value as "user" | "admin")}
           >
             <TabsList className="grid w-full grid-cols-2 dark:bg-gray-700/50 bg-gray-200 dark:text-gray-300 text-gray-700">
-              <TabsTrigger value="user" className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black">User Login</TabsTrigger>
-              <TabsTrigger value="admin" className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black">Admin Login</TabsTrigger>
+              <TabsTrigger
+                value="user"
+                className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black"
+              >
+                User Login
+              </TabsTrigger>
+              <TabsTrigger
+                value="admin"
+                className="data-[state=active]:dark:bg-gray-900 data-[state=active]:bg-white data-[state=active]:dark:text-white data-[state=active]:text-black"
+              >
+                Admin Login
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -121,7 +136,10 @@ const SignIn = () => {
             <div className="space-y-4">
               {/* Username field */}
               <div>
-                <label htmlFor="username" className="block text-sm mb-1 dark:text-gray-300 text-gray-700">
+                <label
+                  htmlFor="username"
+                  className="block text-sm mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Username
                 </label>
                 <div className="relative">
@@ -146,7 +164,10 @@ const SignIn = () => {
 
               {/* Password field without forgot password link */}
               <div>
-                <label htmlFor="password" className="block text-sm mb-1 dark:text-gray-300 text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm mb-1 dark:text-gray-300 text-gray-700"
+                >
                   Password
                 </label>
                 <Input
@@ -176,7 +197,10 @@ const SignIn = () => {
               {loginType === "user" && (
                 <div className="text-center text-sm dark:text-gray-400 text-gray-500 mt-4">
                   Don't have an account?{" "}
-                  <Link to="/signup" className="dark:text-blue-400 text-blue-600 underline dark:hover:text-blue-300 hover:text-blue-700">
+                  <Link
+                    to="/signup"
+                    className="dark:text-blue-400 text-blue-600 underline dark:hover:text-blue-300 hover:text-blue-700"
+                  >
                     Sign up
                   </Link>
                 </div>
